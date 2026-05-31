@@ -6,6 +6,8 @@ __pycache__/
 # C extensions
 *.so
 
+.vscode
+
 # Distribution / packaging
 .Python
 build/
@@ -216,3 +218,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+experiments/
+data/datasets/
+__pycache__/
+*.pyc
+.env
+*.pth
+*.egg-info/
+.env

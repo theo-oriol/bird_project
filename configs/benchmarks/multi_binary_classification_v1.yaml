@@ -1,0 +1,39 @@
+benchmark:
+  name: classification_v1
+  dataset_version: v2__2024-03-05__augmented
+  metric: val_mAP
+  folds:
+  - 0
+  - 1
+  - 2
+experiments:
+  dinov3_freeze:
+    model:
+      backbone:
+        name: dinov3_vits16
+      head:
+        type: multi_binary
+        feat_dim: 384
+        num_classes: 10
+        dropout: 0.1
+    strategy:
+      type: frozen_backbone
+    data:
+      dataset_dir: cross_version_1_FAM
+      binarize: true
+    training:
+      epochs: 100
+      lr: 1e-4
+      batch_size: 64
+    loss:
+      type: bce_weighted
+    folds:
+      0:
+        status: failed
+        run_dir: experiments/dinov3S_Freeze_cross_v1/fold_0
+      1:
+        status: running
+        run_dir: experiments/dinov3S_Freeze_cross_v1/fold_1
+      2:
+        status: failed
+        run_dir: experiments/dinov3S_Freeze_cross_v1/fold_2
