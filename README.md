@@ -1,24 +1,26 @@
 # Bird Project
 
-Deep learning experiments for multi-view bird image classification, regression, and quantile regression. Built around a YAML-driven benchmark system — no hardcoded paths, no one-file-per-experiment chaos.
-
 ---
 
 ## Project structure
 
 ```
 .
+├── checks/
+│   └── check_folds.py                   # Verify folds integrity
 ├── configs/
-│   └── benchmarks/
-│       └── classification_v1.yaml       # benchmark definition + experiment registry
+│   ├── benchmarks/
+│   │   └── classification_v1.yaml       # benchmark definition + experiment registry
+│   └── labelname.json
 ├── data/
 │   ├── raw/                             # source CSVs, never modified
-│   ├── processed/                       # intermediate files
+│   ├── cross/                       # intermediate files
 │   └── datasets/                        # versioned dataset folders
 │       └── cross_version_1_FAM/
 │           ├── labelname.json
 │           ├── train_fold_0.csv
 │           └── valid_fold_0.csv
+├──  docs/
 ├── experiments/                         # auto-generated, gitignored
 │   └── dinov3S_Freeze_cross_v1/
 │       ├── fold_0/
@@ -55,6 +57,7 @@ Deep learning experiments for multi-view bird image classification, regression, 
     ├── run_benchmark.py                 # runs all pending folds, updates YAML status
     ├── make_leaderboard.py              # reads metrics.json, builds leaderboard CSV
     ├── build_dataset.py                 # dataset creation
+    ├── build_folds.py                   # folds creation
     └── slurm_submit.sh                  # SLURM job submission
 ```
 

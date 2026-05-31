@@ -8,9 +8,9 @@ from pathlib import Path
 CROSS_NAME = "cross_version_1_FAM"
 N_FOLDS = 3
 
-CROSS_DIR = Path(__file__).parent.parent / "data/cross"
+CROSS_DIR = Path("data/cross")
 CROSS_PATH = CROSS_DIR / CROSS_NAME
-CONFIG_DIR = Path(__file__).parent.parent / "configs" 
+CONFIG_DIR = Path("configs")
 
 
 path_out_json = os.path.join(CONFIG_DIR,"labelname.json")

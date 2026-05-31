@@ -31,7 +31,6 @@ def run_fold(exp_name, fold_idx, fold_cfg, exp_cfg, bench_cfg):
 
     fold_cfg["status"] = "done" if result.returncode == 0 else "failed"
     save(cfg, BENCHMARK_PATH)
-    return result.returncode == 0
 
 
 cfg   = load(BENCHMARK_PATH)
@@ -39,6 +38,7 @@ bench = cfg["benchmark"]
 
 for exp_name, exp_cfg in cfg["experiments"].items():
     print(f"\n{'='*60}\n{exp_name}\n{'='*60}")
+
     for fold_idx, fold_cfg in exp_cfg["folds"].items():
         if fold_cfg["status"] == "pending":
             print(f"  launching fold {fold_idx}...")

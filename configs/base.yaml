@@ -1,0 +1,37 @@
+device: cuda
+
+data:
+  dataset_dir: ???          # required — set in experiment or via .env
+  img_dir: ???              # required — set in experiment or via .env
+  fold: 0
+  binarize: false           # true for multi_binary, false for regression/quantile
+  num_classes: 10
+
+model:
+  backbone:
+    name: ???               # required — e.g. dinov3_vits16       
+    lora: null              # set in experiment to enable LoRA
+  head:
+    type: ???               # required — multi_binary | multi_regression | multi_quantile
+    feat_dim: ???           # must match backbone.feat_dim
+    dropout: 0.1
+
+strategy:
+  type: frozen_backbone     # frozen_backbone | progressive_unfreeze | ema
+
+training:
+  epochs: 100
+  batch_size: 32
+  num_workers: 4
+  lr: 1e-4
+  lr_min: 1e-7
+  weight_decay: 1e-2
+
+loss:
+  type: bce_weighted        # bce_weighted | bce | mse | huber | pinball
+
+callbacks:
+  - metrics_dump
+  - plotting
+  - checkpoint
+  - history_dump
