@@ -9,7 +9,6 @@ Deep learning experiments for multi-view bird image classification, regression, 
 ```
 .
 ├── configs/
-│   ├── base.yaml                        # default values for all experiments
 │   └── benchmarks/
 │       └── classification_v1.yaml       # benchmark definition + experiment registry
 ├── data/
@@ -76,29 +75,16 @@ cp .env.example .env
 Fill in the paths for your machine:
 ```bash
 # .env
-SOURCE_IMG=/data/theo/V0_NEW_Segmented-Aves-Back-224-RGBA
-EBIRD_CSV=/data/theo/PHA_Jung_lvl1_fraction.csv
-MATCH_CSV=/home/lionel/theo/post_doc/papier/scripts/crosswalk_image_habitat_v2.csv
-OUT_CSV=/home/lionel/theo/post_doc/papier/scripts/V2_dataset_with_labels.csv
+SOURCE_IMG=/path/to/SOURCE_IMG
+DINOV3_PATH=/path/to/DINOV3
+dinov3_vits16=/path/to/dinov3_vits16.pth
 ```
 
 The `.env` is machine-specific and gitignored — you fill it once per machine and never touch it again.
 
-**3. Verify your paths**
-```bash
-ls data/datasets/cross_version_1_FAM
-ls /data/theo/V0_NEW_Segmented-Aves-Back-224-RGBA | head -5
-ls /data/theo/dinov3
-```
-
 ---
 
 ## Running a benchmark
-
-**Check available GPUs**
-```bash
-nvidia-smi
-```
 
 **Launch all pending experiments**
 ```bash
@@ -198,20 +184,6 @@ Only the new `pending` folds will train. Done folds are never touched.
 
 ---
 
-## Running on multiple GPUs in parallel
-
-Each GPU gets its own benchmark YAML — never share a YAML between two concurrent runs:
-
-```bash
-# terminal 1 — GPU 0
-CUDA_VISIBLE_DEVICES=0 nohup python scripts/run_benchmark.py configs/benchmarks/classification_v1.yaml > logs/bench_v1.log 2>&1 &
-
-# terminal 2 — GPU 1
-CUDA_VISIBLE_DEVICES=1 nohup python scripts/run_benchmark.py configs/benchmarks/regression_v1.yaml > logs/bench_reg.log 2>&1 &
-```
-
----
-
 ## Outputs
 
 Every fold produces:
@@ -263,8 +235,7 @@ All fields and their defaults live in `configs/base.yaml`. An experiment only ne
 | `bce_weighted` | BCE with auto-computed class weights from train set |
 | `bce` | unweighted BCE |
 | `mse` | mean squared error |
-| `huber` | Huber loss, set `delta` in config |
-| `pinball` | quantile loss, set `quantiles: [0.1, 0.5, 0.9]` in config |
+| `KLDiv` | Kullback–Leibler divergence |
 
 ---
 
@@ -274,30 +245,18 @@ Dataset versions live in `data/datasets/` with a self-documenting name:
 
 ```
 data/datasets/
-└── v2__2024-03-05__augmented/
-    ├── dataset_card.yaml    ← what this dataset is, how it was built
+└──  cross_version_1_FAM/
+    ├── labelname.json
     ├── train_fold_0.csv
     ├── valid_fold_0.csv
-    └── labelname.json
+    └── ....
+docs
+└── dataset_v1.md   ← what this dataset is, how it was built
+
 ```
 
-`dataset_card.yaml` documents the version so you never lose track of what a dataset contains:
 
-```yaml
-version: 2
-date: 2024-03-05
-description: augmented with eBird cross-validation correction
-source_csv: raw/PHA_Jung_lvl1_fraction.csv
-classes: [1, 2, 3, 4, 8, 12, 14, 9_11, 5_13_15, 6_7]
-num_train: 12400
-num_valid: 3100
-folds: 3
-transforms_applied: [normalize, random_vertical_flip]
-known_issues: null
-changelog:
-  - v1: baseline
-  - v2: added eBird cross correction, rebalanced splits
-```
+
 
 To create a new dataset version, run:
 ```bash
