@@ -58,13 +58,13 @@ class Trainer:
         loss_sum, all_probs, all_labels = 0.0, [], []
 
         for batch in tqdm(loader, desc="train", leave=False):
-            *views, labels, _ = batch
-            views  = [v.to(self.device) for v in views]
+            imgs, labels, _ = batch
+            imgs  = imgs.to(self.device)
             labels = labels.to(self.device)
 
             self.optimizer.zero_grad()
             with torch.autocast(device_type="cuda", dtype=torch.float16):
-                logits = self.model(*views)
+                logits = self.model(imgs)
                 loss   = criterion(logits, labels)
 
             self.scaler.scale(loss).backward()
@@ -87,12 +87,12 @@ class Trainer:
 
         with torch.no_grad():
             for batch in tqdm(loader, desc="val", leave=False):
-                *views, labels, _ = batch
-                views  = [v.to(self.device, non_blocking=True) for v in views]
+                imgs, labels, _ = batch
+                imgs  = imgs.to(self.device)
                 labels = labels.to(self.device)
 
                 with torch.autocast(device_type="cuda", dtype=torch.float16):
-                    logits = self.model(*views)
+                    logits = self.model(imgs)
                     loss   = criterion(logits, labels)
 
                 loss_sum += loss.item()

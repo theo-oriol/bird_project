@@ -32,6 +32,8 @@ class FrozenBackbone:
             eta_min=cfg.training.lr_min,
         )
 
+
+
 STRATEGY_REGISTRY = {
     "frozen_backbone":      FrozenBackbone,
 }

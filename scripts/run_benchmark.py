@@ -3,6 +3,7 @@ import yaml
 import subprocess
 from pathlib import Path
 from datetime import datetime
+import os 
 
 BENCHMARK_PATH = Path(sys.argv[1])
 
@@ -25,7 +26,7 @@ def run_fold(exp_name, fold_idx, fold_cfg, exp_cfg, bench_cfg):
         "python", "scripts/train.py",
         "--exp-name",  exp_name,
         "--fold",      str(fold_idx),
-        "--run-dir",   fold_cfg["run_dir"],
+        "--run-dir",   os.path.join("experiments",fold_cfg["run_dir"]),
         "--benchmark", str(BENCHMARK_PATH),
     ])
 
@@ -40,7 +41,7 @@ for exp_name, exp_cfg in cfg["experiments"].items():
     print(f"\n{'='*60}\n{exp_name}\n{'='*60}")
 
     for fold_idx, fold_cfg in exp_cfg["folds"].items():
-        if fold_cfg["status"] == "pending":
+        if fold_cfg["status"] == "pending" or fold_cfg["status"] == "failled" :
             print(f"  launching fold {fold_idx}...")
             run_fold(exp_name, fold_idx, fold_cfg, exp_cfg, bench)
         else:
