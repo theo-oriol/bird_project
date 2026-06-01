@@ -21,7 +21,7 @@ experiments:
       type: frozen_backbone
     data:
       dataset_dir: cross_version_1_FAM
-      binarize: True
+      binarize: true
     training:
       epochs: 100
       lr: 1e-4
@@ -30,7 +30,7 @@ experiments:
       type: bce_weighted
     folds:
       0:
-        status: pending
+        status: running
         run_dir: dinov3S_Freeze_cross_v1/fold_0
       1:
         status: pending
@@ -38,16 +38,17 @@ experiments:
       2:
         status: pending
         run_dir: dinov3S_Freeze_cross_v1/fold_2
-
   dinov3_LORA:
     model:
       backbone:
         name: dinov3_vits16
         lora:
-          r : 8
-          alpha : 16
-          dropout : 0.05
-          target_modules : ["attn.qkv", "attn.proj"]
+          r: 8
+          alpha: 16
+          dropout: 0.05
+          target_modules:
+          - attn.qkv
+          - attn.proj
       head:
         type: multi_binary
         feat_dim: 384
@@ -57,7 +58,7 @@ experiments:
       type: frozen_backbone
     data:
       dataset_dir: cross_version_1_FAM
-      binarize: True
+      binarize: true
     training:
       epochs: 100
       lr: 1e-4
@@ -73,4 +74,4 @@ experiments:
         run_dir: dinov3S_LORA_cross_v1/fold_1
       2:
         status: pending
-        run_dir: dinov3S_LORA_cross_v1/fold_2  
+        run_dir: dinov3S_LORA_cross_v1/fold_2

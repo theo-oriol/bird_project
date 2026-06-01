@@ -15,7 +15,7 @@ def build_criterion(cfg, train_labels=None):
         pos_weight = torch.from_numpy(
             neg / np.clip(pos, 1, None)
         ).float()
-        return nn.BCEWithLogitsLoss(pos_weight=pos_weight)
+        return nn.BCEWithLogitsLoss(pos_weight=pos_weight.to(cfg.device))
 
     if loss_type == "bce":
         return nn.BCEWithLogitsLoss()

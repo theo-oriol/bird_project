@@ -41,7 +41,7 @@ for exp_name, exp_cfg in cfg["experiments"].items():
     print(f"\n{'='*60}\n{exp_name}\n{'='*60}")
 
     for fold_idx, fold_cfg in exp_cfg["folds"].items():
-        if fold_cfg["status"] == "pending" or fold_cfg["status"] == "failled" :
+        if fold_cfg["status"] == "pending" or fold_cfg["status"] == "failed" :
             print(f"  launching fold {fold_idx}...")
             run_fold(exp_name, fold_idx, fold_cfg, exp_cfg, bench)
         else:

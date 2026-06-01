@@ -1,8 +1,6 @@
 device: cuda
 
 data:
-  dataset_dir: ???          # required — set in experiment or via .env
-  img_dir: ???              # required — set in experiment or via .env
   fold: 0
   binarize: false           # true for multi_binary, false for regression/quantile
   num_classes: 10
@@ -29,7 +27,6 @@ training:
 
 loss:
   type: bce_weighted        # bce_weighted | bce | mse | huber | pinball
-
 callbacks:
   - metrics_dump
   - plotting

@@ -74,9 +74,9 @@ class BirdDataset(Dataset):
     def __getitem__(self, idx):
         img_path = os.path.join(self.img_dir, self.paths[idx])
         
-        if "Belly" in self.img_dir:
+        if "Belly" in self.paths[idx]:
             img_path = img_path.replace("Back", "Belly")
-        elif "Side" in self.img_dir:
+        elif "Side" in self.paths[idx]:
             img_path = img_path.replace("Back", "Side")
 
         img  = Image.open(img_path).convert("RGB")
