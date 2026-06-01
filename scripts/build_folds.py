@@ -6,12 +6,11 @@ from pathlib import Path
 import json 
 
 VERSION = 1
-TYPE_OF_SPLIT = "FAM" # ["FAM","GENRE", "SPE"]
+TYPE_OF_SPLIT = "SPE" # ["FAM","GENRE", "SPE"]
 N_FOLDS  = 3
 
 CONFIG_DIR = "configs" 
 DOCS_DIR  = Path("docs")
-DATASET_DIR = "data/datasets"
 DATASET = f"data/datasets/dataset_version_{VERSION}.csv"
 FOLD_DIR =f"data/datasets/cross"
 FOLD_NAME= f"cross_version_{VERSION}_{TYPE_OF_SPLIT}"
