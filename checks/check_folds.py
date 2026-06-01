@@ -5,7 +5,7 @@ import os
 import json 
 from pathlib import Path
 
-CROSS_NAME = "cross_version_1_FAM"
+CROSS_NAME = "cross_version_1_GENRE"  # change this to your cross name (e.g. "cross_version_1_FAM")
 N_FOLDS = 3
 
 CROSS_DIR = Path("data/cross")
