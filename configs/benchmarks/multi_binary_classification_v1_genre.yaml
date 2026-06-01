@@ -1,6 +1,5 @@
 benchmark:
-  name: classification_v1
-  dataset_version: v2__2024-03-05__augmented
+  name: classification_v1_genre
   metric: val_mAUC
   folds:
   - 0
@@ -20,7 +19,7 @@ experiments:
     strategy:
       type: frozen_backbone
     data:
-      dataset_dir: cross_version_1_FAM
+      dataset_dir: cross_version_1_GENRE
       binarize: true
     training:
       epochs: 100

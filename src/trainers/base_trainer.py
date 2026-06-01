@@ -57,7 +57,7 @@ class Trainer:
         self.model.train()
         loss_sum, all_probs, all_labels = 0.0, [], []
 
-        for batch in tqdm(loader, desc="train", leave=False):
+        for batch in loader:
             imgs, labels, _ = batch
             imgs  = imgs.to(self.device)
             labels = labels.to(self.device)
@@ -86,7 +86,7 @@ class Trainer:
         loss_sum, all_probs, all_labels = 0.0, [], []
 
         with torch.no_grad():
-            for batch in tqdm(loader, desc="val", leave=False):
+            for batch in loader:
                 imgs, labels, _ = batch
                 imgs  = imgs.to(self.device)
                 labels = labels.to(self.device)

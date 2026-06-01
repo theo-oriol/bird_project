@@ -1,0 +1,76 @@
+benchmark:
+  name: classification_v1_fam
+  metric: val_mAUC
+  folds:
+  - 0
+  - 1
+  - 2
+experiments:
+  dinov3_freeze:
+    model:
+      backbone:
+        name: dinov3_vits16
+        lora: null
+      head:
+        type: multi_binary
+        feat_dim: 384
+        num_classes: 10
+        dropout: 0.1
+    strategy:
+      type: frozen_backbone
+    data:
+      dataset_dir: cross_version_1_FAM
+      binarize: true
+    training:
+      epochs: 100
+      lr: 1e-4
+      batch_size: 64
+    loss:
+      type: bce_weighted
+    folds:
+      0:
+        status: pending
+        run_dir: dinov3S_Freeze_cross_v1/fold_0
+      1:
+        status: running
+        run_dir: dinov3S_Freeze_cross_v1/fold_1
+      2:
+        status: pending
+        run_dir: dinov3S_Freeze_cross_v1/fold_2
+  dinov3_LORA:
+    model:
+      backbone:
+        name: dinov3_vits16
+        lora:
+          r: 8
+          alpha: 16
+          dropout: 0.05
+          target_modules:
+          - attn.qkv
+          - attn.proj
+      head:
+        type: multi_binary
+        feat_dim: 384
+        num_classes: 10
+        dropout: 0.1
+    strategy:
+      type: frozen_backbone
+    data:
+      dataset_dir: cross_version_1_FAM
+      binarize: true
+    training:
+      epochs: 100
+      lr: 1e-4
+      batch_size: 64
+    loss:
+      type: bce_weighted
+    folds:
+      0:
+        status: pending
+        run_dir: dinov3S_LORA_cross_v1/fold_0
+      1:
+        status: pending
+        run_dir: dinov3S_LORA_cross_v1/fold_1
+      2:
+        status: pending
+        run_dir: dinov3S_LORA_cross_v1/fold_2
