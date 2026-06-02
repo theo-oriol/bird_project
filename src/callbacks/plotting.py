@@ -9,14 +9,15 @@ class PlottingCallback:
     Plots every `plot_every` epochs to avoid I/O overhead on long runs.
     """
 
-    def __init__(self, plot_every=5):
+    def __init__(self, cfg, plot_every=5):
         self.plot_every = plot_every
+        self.cfg = cfg
 
     def on_epoch_end(self, epoch, model, hist, run_dir):
         if epoch % self.plot_every != 0 and epoch != 1:
             return
         self._plot_loss(hist, run_dir)
-        if self.model.head.type == "multi_binary":
+        if self.cfg.model.head.type == "multi_binary":
             self._plot_metric(hist, "train_ap",  "val_ap",  "mAP", run_dir)
             self._plot_metric(hist, "train_auc", "val_auc", "AUC", run_dir)
         elif self.model.head.type == "multi_regression":

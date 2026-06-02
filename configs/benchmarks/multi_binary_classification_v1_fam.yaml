@@ -33,7 +33,7 @@ experiments:
         status: running
         run_dir: dinov3S_Freeze_cross_v1/fold_0
       1:
-        status: pending
+        status: running
         run_dir: dinov3S_Freeze_cross_v1/fold_1
       2:
         status: pending

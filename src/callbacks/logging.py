@@ -13,7 +13,7 @@ class MetricsDumpCallback:
         self.cfg = cfg
 
     def on_epoch_end(self, epoch, model, hist, run_dir):
-        if self.cfg.head.type == "multi_binary":
+        if self.cfg.model.head.type == "multi_binary":
             metrics = {
                 "epochs_trained": epoch,
                 "val_mAP":        float(np.nanmean(np.stack(hist["val_ap"])[-1])),
@@ -24,7 +24,7 @@ class MetricsDumpCallback:
                 "val_ap_per_class":  np.stack(hist["val_ap"])[-1].tolist(),
                 "val_auc_per_class": np.stack(hist["val_auc"])[-1].tolist(),
             }
-        elif self.cfg.head.type == "multi_regression":
+        elif self.cfg.model.head.type == "multi_regression":
             metrics = {
                 "epochs_trained": epoch,
                 "val_mse":        float(np.nanmean(np.stack(hist["val_mse"])[-1])),
