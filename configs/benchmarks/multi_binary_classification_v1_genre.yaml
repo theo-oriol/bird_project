@@ -1,6 +1,8 @@
 benchmark:
   name: classification_v1_genre
-  metric: val_mAUC
+  img_folder: V0_NEW_Segmented-Aves-Back-224-RGBA
+  dataset_dir: cross_version_1_GENRE
+  metric: val_auc
   folds:
   - 0
   - 1
@@ -19,23 +21,22 @@ experiments:
     strategy:
       type: frozen_backbone
     data:
-      dataset_dir: cross_version_1_GENRE
       binarize: true
     training:
-      epochs: 100
+      epochs: 10
       lr: 1e-4
-      batch_size: 64
+      batch_size: 256
     loss:
       type: bce_weighted
     folds:
       0:
-        status: running
+        status: failed
         run_dir: dinov3S_Freeze_cross_v1/fold_0
       1:
-        status: pending
+        status: failed
         run_dir: dinov3S_Freeze_cross_v1/fold_1
       2:
-        status: pending
+        status: failed
         run_dir: dinov3S_Freeze_cross_v1/fold_2
   dinov3_LORA:
     model:
@@ -56,7 +57,6 @@ experiments:
     strategy:
       type: frozen_backbone
     data:
-      dataset_dir: cross_version_1_FAM
       binarize: true
     training:
       epochs: 100
@@ -66,11 +66,11 @@ experiments:
       type: bce_weighted
     folds:
       0:
-        status: pending
+        status: waiting
         run_dir: dinov3S_LORA_cross_v1/fold_0
       1:
-        status: pending
+        status: waiting
         run_dir: dinov3S_LORA_cross_v1/fold_1
       2:
-        status: pending
+        status: waiting
         run_dir: dinov3S_LORA_cross_v1/fold_2

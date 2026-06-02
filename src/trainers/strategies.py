@@ -7,8 +7,9 @@ class FrozenBackbone:
     needs_optimizer_refresh = False
 
     def setup(self, model, cfg):
-        for p in model.backbone.parameters():
-            p.requires_grad = False
+        if not cfg.model.backbone.get("lora") :
+            for p in model.backbone.parameters():
+                p.requires_grad = False
         for p in model.head.parameters():
             p.requires_grad = True
 

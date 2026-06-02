@@ -91,15 +91,15 @@ class BirdDataset(Dataset):
         return img, label, self.paths[idx]
 
 
-def build_dataloaders(cfg):
+def build_dataloaders(cfg, dataset_dir, img_folder):
     """
     Builds train and val dataloaders from config.
     Returns (train_loader, val_loader, train_labels) — train_labels
     is returned raw for weighted loss computation.
     """
     fold     = cfg.data.fold
-    data_dir = os.path.join(FOLD_DIR, cfg.data.dataset_dir)        # path to the fold CSVs
-    img_dir  = SOURCE_IMG           # path to the images
+    data_dir = os.path.join(FOLD_DIR, dataset_dir)        # path to the fold CSVs
+    img_dir  = os.path.join(SOURCE_IMG ,img_folder)           # path to the images
     binarize = cfg.data.get("binarize", False)
 
     train_paths, train_labels = load_csv(

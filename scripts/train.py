@@ -52,10 +52,10 @@ def main():
     print(f"{'='*60}\n")
 
     # ---- build everything ----
-    train_loader, val_loader, train_labels = build_dataloaders(cfg)
+    train_loader, val_loader, train_labels = build_dataloaders(cfg, benchmark.benchmark.dataset_dir, benchmark.benchmark.img_folder)
     model     = build_model(cfg)
     criterion = build_criterion(cfg, train_labels)
-    callbacks = build_callbacks(cfg)
+    callbacks = build_callbacks(cfg, data_dir=benchmark.benchmark.dataset_dir, val_loader=val_loader)
 
     # ---- train ----
     trainer = Trainer(model, cfg, args.run_dir, callbacks=callbacks)

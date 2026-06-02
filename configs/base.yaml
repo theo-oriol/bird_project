@@ -27,8 +27,10 @@ training:
 
 loss:
   type: bce_weighted        # bce_weighted | bce | mse | huber | pinball
+
 callbacks:
   - metrics_dump
   - plotting
   - checkpoint
   - history_dump
+  - inferenceMultiBin

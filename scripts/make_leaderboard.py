@@ -19,7 +19,7 @@ def load_fold_metrics(run_dir):
         return json.load(f)
 
 
-def summarize_exp(exp_name, exp_cfg, metric, class_names):
+def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None):
     """
     Reads metrics.json from every done fold.
     Returns a summary row + per-fold rows.
@@ -28,8 +28,9 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names):
 
     for fold_idx, fold_cfg in exp_cfg["folds"].items():
         if fold_cfg["status"] != "done":
-            raise ValueError(f"Fold {fold_idx} is not done yet (status: {fold_cfg['status']})")
-        m = load_fold_metrics(fold_cfg["run_dir"])
+            print(f"Fold {fold_idx} is not done yet (status: {fold_cfg['status']})")
+            continue
+        m = load_fold_metrics(os.path.join("experiments", benchmark_name, fold_cfg["run_dir"]))
         if m is None:
             raise ValueError(f"Metrics file not found for {exp_name} fold {fold_idx}")
 
@@ -42,7 +43,7 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names):
             "val_auc":           m.get("val_auc"),
             "train_mAP":         m.get("train_mAP"),
             "train_auc":         m.get("train_auc"),
-            "run_dir":           fold_cfg["run_dir"],
+            "run_dir":           str(Path(fold_cfg["run_dir"]).parent),
         }
 
         # per-class AP and AUC
@@ -52,7 +53,15 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names):
             row[f"AP_{name}"]  = ap_per_class[i]  if i < len(ap_per_class)  else None
             row[f"AUC_{name}"] = auc_per_class[i] if i < len(auc_per_class) else None
 
-        fold_rows.append(row)
+        pval_per_class  = m.get("mannwhitney_pvalue_per_class", {})
+        pval_overall    = m.get("mannwhitney_pvalue_overall")
+
+        for name in class_names:
+            row[f"pval_{name}"] = pval_per_class.get(str(name))
+
+        row["pval_overall"] = pval_overall
+        
+        fold_rows.append(row)   
 
     if not fold_rows:
         return None, []
@@ -70,12 +79,13 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names):
         )
 
     summary = {
+        "benchmark":      benchmark_name,
         "experiment":     exp_name,
         "fold":           "all",
         "status":         "done",
         "epochs_trained": fold_rows[0]["epochs_trained"],
         "folds_done":     len(fold_rows),
-        "run_dir":        str(Path(fold_rows[0]["run_dir"]).parent),
+        "run_dir":        str(Path(fold_rows[0]["run_dir"])),
     }
 
     # mean/std/min/max for mAP and mAUC
@@ -83,8 +93,7 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names):
         mean, std, mn, mx = stats([r[key] for r in fold_rows])
         summary[f"{key}_mean"] = mean
         summary[f"{key}_std"]  = std
-        summary[f"{key}_min"]  = mn
-        summary[f"{key}_max"]  = mx
+
 
     # per-class AP mean/std across folds
     for name in class_names:
@@ -95,8 +104,19 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names):
         summary[f"AUC_{name}_mean"] = au_mean
         summary[f"AUC_{name}_std"]  = au_std
 
+    # per-class p-value mean/std across folds
+    for name in class_names:
+        pv_mean, pv_std, _, _ = stats([r[f"pval_{name}"] for r in fold_rows])
+        summary[f"pval_{name}_mean"] = pv_mean
+        summary[f"pval_{name}_std"]  = pv_std
+
+        pv_mean, pv_std, _, _ = stats([r["pval_overall"] for r in fold_rows])
+        summary["pval_overall_mean"] = pv_mean
+        summary["pval_overall_std"]  = pv_std
+
+    
     # save summary.json next to the fold dirs
-    summary_path = Path(summary["run_dir"]) / "summary.json"
+    summary_path = Path(os.path.join("experiments", summary["benchmark"], summary["run_dir"])) / "summary.json"
     with open(summary_path, "w") as f:
         json.dump({**summary, "per_fold": fold_rows}, f, indent=2)
 
@@ -111,11 +131,7 @@ def main():
     metric = bench["metric"]
 
     # load class names from labelname.json if available, else use indices
-    dataset_dir = None
-    for exp_cfg in cfg["experiments"].values():
-        dataset_dir = exp_cfg.get("data", {}).get("dataset_dir")
-        if dataset_dir:
-            break
+    dataset_dir = bench["dataset_dir"]
     dataset_dir = os.path.join(CROSS_PATH,dataset_dir)
 
     label_path = Path(dataset_dir) / "labelname.json" if dataset_dir else None
@@ -129,7 +145,7 @@ def main():
     fold_rows    = []
 
     for exp_name, exp_cfg in cfg["experiments"].items():
-        summary, folds = summarize_exp(exp_name, exp_cfg, metric, class_names)
+        summary, folds = summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=bench["name"])
         if summary:
             summary_rows.append(summary)
         fold_rows.extend(folds)
@@ -154,11 +170,11 @@ def main():
     )
 
     # ---- save ----
-    out_dir = BENCHMARK_PATH.parent
+    out_dir = Path("benchmarks")
     stem    = BENCHMARK_PATH.stem
 
-    leaderboard_path = out_dir / f"{stem}_leaderboard.csv"
-    folds_path       = out_dir / f"{stem}_folds.csv"
+    leaderboard_path = out_dir / "cross" / f"{stem}_leaderboard.csv"
+    folds_path       = out_dir / "per_fold" / f"{stem}_folds.csv"
 
     df_summary.to_csv(leaderboard_path, index=False)
     df_folds.to_csv(folds_path, index=False)
@@ -187,6 +203,15 @@ def main():
     print(df_summary[ap_cols].to_string(index=False))
     print("\n── Per-class AUC (mean ± std across folds) ──")
     print(df_summary[auc_cols].to_string(index=False))
+
+    # per-class p-values
+    pval_cols = ["experiment"] + [f"pval_{n}_mean" for n in class_names] + [f"pval_{n}_std" for n in class_names]
+    print("\n── Per-class Mann-Whitney p-value (mean ± std across folds) ──")
+    print(df_summary[pval_cols].to_string(index=False))
+
+    overall_cols = ["experiment", "pval_overall_mean", "pval_overall_std"]
+    print("\n── Overall p-value ──")
+    print(df_summary[overall_cols].to_string(index=False))
 
     print(f"\nLeaderboard saved to {leaderboard_path}")
     print(f"Per-fold detail  saved to {folds_path}")

@@ -75,6 +75,7 @@ class Trainer:
             loss_sum += loss.item()
             all_probs.append(torch.sigmoid(logits).detach().cpu())
             all_labels.append(labels.detach().cpu())
+        
 
         return self._compute_metrics(loss_sum, all_probs, all_labels, loader)
 
@@ -101,7 +102,6 @@ class Trainer:
 
         if hasattr(self.strategy, "restore_ema"):
             self.strategy.restore_ema(self.model)
-
         return self._compute_metrics(loss_sum, all_probs, all_labels, loader)
 
     def _compute_metrics(self, loss_sum, all_probs, all_labels, loader):
