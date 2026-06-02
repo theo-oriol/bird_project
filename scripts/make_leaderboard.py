@@ -176,6 +176,10 @@ def main():
     leaderboard_path = out_dir / "cross" / f"{stem}_leaderboard.csv"
     folds_path       = out_dir / "per_fold" / f"{stem}_folds.csv"
 
+    if not leaderboard_path.parent.exists():
+        leaderboard_path.parent.mkdir(parents=True)
+    if not folds_path.parent.exists():
+        folds_path.parent.mkdir(parents=True)
     df_summary.to_csv(leaderboard_path, index=False)
     df_folds.to_csv(folds_path, index=False)
 
