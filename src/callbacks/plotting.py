@@ -20,11 +20,11 @@ class PlottingCallback:
         if self.cfg.model.head.type == "multi_binary":
             self._plot_metric(hist, "train_ap",  "val_ap",  "mAP", run_dir)
             self._plot_metric(hist, "train_auc", "val_auc", "AUC", run_dir)
-        elif self.model.head.type == "multi_regression":
+        elif self.cfg.model.head.type == "multi_regression":
             self._plot_metric(hist, "train_mse", "val_mse", "MSE", run_dir)
             self._plot_metric(hist, "train_mae", "val_mae", "MAE", run_dir)
         else:
-            raise ValueError(f"Unknown head type '{self.model.head.type}'")
+            raise ValueError(f"Unknown head type '{self.cfg.model.head.type}'")
 
     def _plot_loss(self, hist, run_dir):
         plt.figure()

@@ -30,7 +30,7 @@ experiments:
       type: KLDiv
     folds:
       0:
-        status: pending
+        status: waiting
         run_dir: dinov3S_Freeze_cross_v1/fold_0
       1:
         status: pending
@@ -75,7 +75,7 @@ experiments:
       type: KLDiv
     folds:
       0:
-        status: pending
+        status: waiting
         run_dir: dinov3S_LORA_cross_v1/fold_0
       1:
         status: pending

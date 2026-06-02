@@ -34,32 +34,59 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None):
         if m is None:
             raise ValueError(f"Metrics file not found for {exp_name} fold {fold_idx}")
 
-        row = {
-            "experiment":        exp_name,
-            "fold":              fold_idx,
-            "status":            "done",
-            "epochs_trained":    m.get("epochs_trained"),
-            "val_mAP":           m.get("val_mAP"),
-            "val_auc":           m.get("val_auc"),
-            "train_mAP":         m.get("train_mAP"),
-            "train_auc":         m.get("train_auc"),
-            "run_dir":           str(Path(fold_cfg["run_dir"]).parent),
-        }
+        if exp_cfg["model"]["head"]["type"] == "multi_binary":
+            row = {
+                "experiment":        exp_name,
+                "fold":              fold_idx,
+                "status":            "done",
+                "epochs_trained":    m.get("epochs_trained"),
+                "val_mAP":           m.get("val_mAP"),
+                "val_auc":           m.get("val_auc"),
+                "train_mAP":         m.get("train_mAP"),
+                "train_auc":         m.get("train_auc"),
+                "run_dir":           str(Path(fold_cfg["run_dir"]).parent),
+            }
 
-        # per-class AP and AUC
-        ap_per_class  = m.get("val_ap_per_class", [])
-        auc_per_class = m.get("val_auc_per_class", [])
-        for i, name in enumerate(class_names):
-            row[f"AP_{name}"]  = ap_per_class[i]  if i < len(ap_per_class)  else None
-            row[f"AUC_{name}"] = auc_per_class[i] if i < len(auc_per_class) else None
+            # per-class AP and AUC
+            ap_per_class  = m.get("val_ap_per_class", [])
+            auc_per_class = m.get("val_auc_per_class", [])
+            for i, name in enumerate(class_names):
+                row[f"AP_{name}"]  = ap_per_class[i]  if i < len(ap_per_class)  else None
+                row[f"AUC_{name}"] = auc_per_class[i] if i < len(auc_per_class) else None
 
-        pval_per_class  = m.get("mannwhitney_pvalue_per_class", {})
-        pval_overall    = m.get("mannwhitney_pvalue_overall")
+            pval_per_class  = m.get("mannwhitney_pvalue_per_class", {})
+            pval_overall    = m.get("mannwhitney_pvalue_overall")
 
-        for name in class_names:
-            row[f"pval_{name}"] = pval_per_class.get(str(name))
+            for name in class_names:
+                row[f"pval_{name}"] = pval_per_class.get(str(name))
 
-        row["pval_overall"] = pval_overall
+            row["pval_overall"] = pval_overall
+        elif exp_cfg["model"]["head"]["type"] == "multi_regression":
+            row = {
+                "experiment":        exp_name,
+                "fold":              fold_idx,
+                "status":            "done",
+                "epochs_trained":    m.get("epochs_trained"),
+                "val_mse":           m.get("val_mse"),
+                "train_mse":         m.get("train_mse"),
+                "val_mae":           m.get("val_mae"),
+                "train_mae":         m.get("train_mae"),
+                "run_dir":           str(Path(fold_cfg["run_dir"]).parent),
+            }
+
+            mse_per_class  = m.get("val_mse_per_class", [])
+            mae_per_class  = m.get("val_mae_per_class", [])
+            for i, name in enumerate(class_names):
+                row[f"MSE_{name}"] = mse_per_class[i] if i < len(mse_per_class) else None
+                row[f"MAE_{name}"] = mae_per_class[i] if i < len(mae_per_class) else None
+
+            pval_per_class  = m.get("spearman_pvalue_per_class", {})
+            pval_overall    = m.get("spearman_pvalue_overall")
+
+            for name in class_names:
+                row[f"pval_{name}"] = pval_per_class.get(str(name))
+
+            row["pval_overall"] = pval_overall
         
         fold_rows.append(row)   
 
@@ -87,32 +114,54 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None):
         "folds_done":     len(fold_rows),
         "run_dir":        str(Path(fold_rows[0]["run_dir"])),
     }
+    if exp_cfg["model"]["head"]["type"] == "multi_binary":
+        # mean/std/min/max for mAP and mAUC
+        for key in ("val_mAP", "val_auc", "train_mAP", "train_auc"):
+            mean, std, mn, mx = stats([r[key] for r in fold_rows])
+            summary[f"{key}_mean"] = mean
+            summary[f"{key}_std"]  = std
 
-    # mean/std/min/max for mAP and mAUC
-    for key in ("val_mAP", "val_auc", "train_mAP", "train_auc"):
-        mean, std, mn, mx = stats([r[key] for r in fold_rows])
-        summary[f"{key}_mean"] = mean
-        summary[f"{key}_std"]  = std
 
+        # per-class AP mean/std across folds
+        for name in class_names:
+            ap_mean, ap_std, _, _ = stats([r[f"AP_{name}"]  for r in fold_rows])
+            au_mean, au_std, _, _ = stats([r[f"AUC_{name}"] for r in fold_rows])
+            summary[f"AP_{name}_mean"]  = ap_mean
+            summary[f"AP_{name}_std"]   = ap_std
+            summary[f"AUC_{name}_mean"] = au_mean
+            summary[f"AUC_{name}_std"]  = au_std
 
-    # per-class AP mean/std across folds
-    for name in class_names:
-        ap_mean, ap_std, _, _ = stats([r[f"AP_{name}"]  for r in fold_rows])
-        au_mean, au_std, _, _ = stats([r[f"AUC_{name}"] for r in fold_rows])
-        summary[f"AP_{name}_mean"]  = ap_mean
-        summary[f"AP_{name}_std"]   = ap_std
-        summary[f"AUC_{name}_mean"] = au_mean
-        summary[f"AUC_{name}_std"]  = au_std
+        # per-class p-value mean/std across folds
+        for name in class_names:
+            pv_mean, pv_std, _, _ = stats([r[f"pval_{name}"] for r in fold_rows])
+            summary[f"pval_{name}_mean"] = pv_mean
+            summary[f"pval_{name}_std"]  = pv_std
 
-    # per-class p-value mean/std across folds
-    for name in class_names:
-        pv_mean, pv_std, _, _ = stats([r[f"pval_{name}"] for r in fold_rows])
-        summary[f"pval_{name}_mean"] = pv_mean
-        summary[f"pval_{name}_std"]  = pv_std
+        pv_mean, pv_std, _, _ = stats([r["pval_overall"] for r in fold_rows])
+        summary["pval_overall_mean"] = pv_mean
+        summary["pval_overall_std"]  = pv_std
+    elif exp_cfg["model"]["head"]["type"] == "multi_regression":
+        for key in ("val_mse", "train_mse", "val_mae", "train_mae"):
+            mean, std, mn, mx = stats([r[key] for r in fold_rows])
+            summary[f"{key}_mean"] = mean
+            summary[f"{key}_std"]  = std
 
-    pv_mean, pv_std, _, _ = stats([r["pval_overall"] for r in fold_rows])
-    summary["pval_overall_mean"] = pv_mean
-    summary["pval_overall_std"]  = pv_std
+        for name in class_names:
+            mse_mean, mse_std, _, _ = stats([r[f"MSE_{name}"] for r in fold_rows])
+            mae_mean, mae_std, _, _ = stats([r[f"MAE_{name}"] for r in fold_rows])
+            summary[f"MSE_{name}_mean"] = mse_mean
+            summary[f"MSE_{name}_std"]  = mse_std
+            summary[f"MAE_{name}_mean"] = mae_mean
+            summary[f"MAE_{name}_std"]  = mae_std
+
+        for name in class_names:
+            pv_mean, pv_std, _, _ = stats([r[f"pval_{name}"] for r in fold_rows])
+            summary[f"pval_{name}_mean"] = pv_mean
+            summary[f"pval_{name}_std"]  = pv_std
+
+        pv_mean, pv_std, _, _ = stats([r["pval_overall"] for r in fold_rows])
+        summary["pval_overall_mean"] = pv_mean
+        summary["pval_overall_std"]  = pv_std
 
     
     # save summary.json next to the fold dirs
@@ -193,36 +242,66 @@ def main():
     print(f"  Folds done: {len(fold_rows)}")
     print(f"{'='*60}\n")
 
-    # global metrics
-    global_cols = [
-        "rank", "experiment",
-        "val_mAP_mean", "val_mAP_std",
-        "val_auc_mean", "val_auc_std",
-        "folds_done",
-    ]
-    print("── Global metrics ──")
-    print(df_summary[global_cols].to_string(index=False))
+    if cfg["benchmark"]["metric"] in ["val_mAP", "val_auc"]:
+        # global metrics
+        global_cols = [
+            "rank", "experiment",
+            "val_mAP_mean", "val_mAP_std",
+            "val_auc_mean", "val_auc_std",
+            "folds_done",
+        ]
+        print("── Global metrics ──")
+        print(df_summary[global_cols].to_string(index=False))
 
-    # per-class AP
-    ap_cols  = ["experiment"] + [f"AP_{n}_mean"  for n in class_names] + [f"AP_{n}_std"  for n in class_names]
-    auc_cols = ["experiment"] + [f"AUC_{n}_mean" for n in class_names] + [f"AUC_{n}_std" for n in class_names]
-    print("\n── Per-class AP (mean ± std across folds) ──")
-    print(df_summary[ap_cols].to_string(index=False))
-    print("\n── Per-class AUC (mean ± std across folds) ──")
-    print(df_summary[auc_cols].to_string(index=False))
+        # per-class AP
+        ap_cols  = ["experiment"] + [f"AP_{n}_mean"  for n in class_names] + [f"AP_{n}_std"  for n in class_names]
+        auc_cols = ["experiment"] + [f"AUC_{n}_mean" for n in class_names] + [f"AUC_{n}_std" for n in class_names]
+        print("\n── Per-class AP (mean ± std across folds) ──")
+        print(df_summary[ap_cols].to_string(index=False))
+        print("\n── Per-class AUC (mean ± std across folds) ──")
+        print(df_summary[auc_cols].to_string(index=False))
 
-    # per-class p-values
-    pval_cols = ["experiment"] + [f"pval_{n}_mean" for n in class_names] + [f"pval_{n}_std" for n in class_names]
-    print("\n── Per-class Mann-Whitney p-value (mean ± std across folds) ──")
-    print(df_summary[pval_cols].to_string(index=False))
+        # per-class p-values
+        pval_cols = ["experiment"] + [f"pval_{n}_mean" for n in class_names] + [f"pval_{n}_std" for n in class_names]
+        print("\n── Per-class Mann-Whitney p-value (mean ± std across folds) ──")
+        print(df_summary[pval_cols].to_string(index=False))
 
-    overall_cols = ["experiment", "pval_overall_mean", "pval_overall_std"]
-    print("\n── Overall p-value ──")
-    print(df_summary[overall_cols].to_string(index=False))
+        overall_cols = ["experiment", "pval_overall_mean", "pval_overall_std"]
+        print("\n── Overall p-value ──")
+        print(df_summary[overall_cols].to_string(index=False))
+
+        
+    
+    elif cfg["benchmark"]["metric"] == "val_mse":
+        # global metrics
+        global_cols = [
+            "rank", "experiment",
+            "val_mse_mean", "val_mse_std",
+            "val_mae_mean", "val_mae_std",
+            "folds_done",
+        ]
+        print("── Global metrics ──")
+        print(df_summary[global_cols].to_string(index=False))
+
+        mse_cols = ["experiment"] + [f"MSE_{n}_mean" for n in class_names] + [f"MSE_{n}_std" for n in class_names]
+        mae_cols = ["experiment"] + [f"MAE_{n}_mean" for n in class_names] + [f"MAE_{n}_std" for n in class_names]
+        print("\n── Per-class MSE (mean ± std across folds) ──")
+        print(df_summary[mse_cols].to_string(index=False))
+        print("\n── Per-class MAE (mean ± std across folds) ──")
+        print(df_summary[mae_cols].to_string(index=False))
+
+        # per-class p-values
+        pval_cols = ["experiment"] + [f"pval_{n}_mean" for n in class_names] + [f"pval_{n}_std" for n in class_names]
+        print("\n── Per-class spearman p-value (mean ± std across folds) ──")
+        print(df_summary[pval_cols].to_string(index=False))
+
+        overall_cols = ["experiment", "pval_overall_mean", "pval_overall_std"]
+        print("\n── Overall p-value ──")
+        print(df_summary[overall_cols].to_string(index=False))
+
 
     print(f"\nLeaderboard saved to {leaderboard_path}")
     print(f"Per-fold detail  saved to {folds_path}")
-
 
 if __name__ == "__main__":
     main()

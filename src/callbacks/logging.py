@@ -35,7 +35,7 @@ class MetricsDumpCallback:
                 "val_mae_per_class": np.stack(hist["val_mae"])[-1].tolist(),
             }
         else : 
-            raise ValueError(f"Unknown head type '{self.cfg.head.type}'")
+            raise ValueError(f"Unknown head type '{self.cfg.model.head.type}'")
         
         with open(os.path.join(run_dir, "metrics.json"), "w") as f:
             json.dump(metrics, f, indent=2)
