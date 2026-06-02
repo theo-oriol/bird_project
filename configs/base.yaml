@@ -33,4 +33,4 @@ callbacks:
   - plotting
   - checkpoint
   - history_dump
-  - inferenceMultiBin
+  - inference

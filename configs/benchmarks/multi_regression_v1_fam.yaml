@@ -44,7 +44,7 @@ experiments:
     - plotting
     - checkpoint
     - history_dump
-    - inferenceMultiBin
+    - inference
 
 
   dinov3_LORA:

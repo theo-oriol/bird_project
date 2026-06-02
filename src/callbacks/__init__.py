@@ -1,7 +1,7 @@
 from .plotting   import PlottingCallback
 from .logging    import MetricsDumpCallback, HistoryDumpCallback
 from .checkpoint import CheckpointCallback
-from .inference  import InferenceMultiBinCallback
+from .inference  import Inference
 
 
 CALLBACK_REGISTRY = {
@@ -9,7 +9,7 @@ CALLBACK_REGISTRY = {
     "metrics_dump":  MetricsDumpCallback,
     "history_dump":  HistoryDumpCallback,
     "checkpoint":    CheckpointCallback,
-    "inferenceMultiBin":     InferenceMultiBinCallback, 
+    "inference":     Inference, 
 }
 
 
@@ -27,12 +27,12 @@ def build_callbacks(cfg, val_loader=None, data_dir=None):
             callbacks.append(cls(cfg))
         elif cls is HistoryDumpCallback:
             callbacks.append(cls(total_epochs=cfg.training.epochs))
-        elif cls is InferenceMultiBinCallback:
+        elif cls is Inference:
             assert data_dir is not None, \
                 "inference callback requires data_source argument"
             callbacks.append(cls(cfg, data_dir=data_dir, val_loader=val_loader))
         elif cls is PlottingCallback:
-            callbacks.append(cls())
+            callbacks.append(cls(cfg))
         elif cls is MetricsDumpCallback:
             callbacks.append(cls(cfg))
         else:            raise ValueError(f"Don't know how to initialize callback '{name}'")

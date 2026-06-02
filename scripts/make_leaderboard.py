@@ -110,9 +110,9 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None):
         summary[f"pval_{name}_mean"] = pv_mean
         summary[f"pval_{name}_std"]  = pv_std
 
-        pv_mean, pv_std, _, _ = stats([r["pval_overall"] for r in fold_rows])
-        summary["pval_overall_mean"] = pv_mean
-        summary["pval_overall_std"]  = pv_std
+    pv_mean, pv_std, _, _ = stats([r["pval_overall"] for r in fold_rows])
+    summary["pval_overall_mean"] = pv_mean
+    summary["pval_overall_std"]  = pv_std
 
     
     # save summary.json next to the fold dirs
@@ -135,6 +135,9 @@ def main():
     dataset_dir = os.path.join(CROSS_PATH,dataset_dir)
 
     label_path = Path(dataset_dir) / "labelname.json" if dataset_dir else None
+    if label_path is None or not label_path.exists():
+        raise ValueError(f"Warning: labelname.json not found in {dataset_dir}, using class indices as names")
+    
     with open(label_path, "r") as f:
         class_names = json.load(f)  
     

@@ -25,13 +25,13 @@ class MultiRegressionHead(nn.Module):
     Multi-output regression.
     Output: (B, num_outputs) → KL
     """
-    def __init__(self, feat_dim, num_outputs, dropout=0.1):
+    def __init__(self, feat_dim, num_classes, dropout=0.1):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(feat_dim, feat_dim // 2),
             nn.GELU(),
             nn.Dropout(dropout),
-            nn.Linear(feat_dim // 2, num_outputs),
+            nn.Linear(feat_dim // 2, num_classes),
         )
 
     def forward(self, x):

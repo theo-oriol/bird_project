@@ -2,6 +2,7 @@ import os
 import json
 import torch
 from torch.optim.lr_scheduler import CosineAnnealingLR
+import torch.nn.functional as F
 from tqdm import tqdm
 
 from .strategies import build_strategy
@@ -21,13 +22,23 @@ class Trainer:
         self.optimizer = self.strategy.build_optimizer(model, cfg)
         self.scheduler = self.strategy.build_scheduler(self.optimizer, cfg)
         self.scaler    = torch.amp.GradScaler()
-
-        self.hist = {
-            "epoch":      [],
-            "train_loss": [], "val_loss":  [],
-            "train_ap":   [], "val_ap":    [],
-            "train_auc":  [], "val_auc":   [],
-        }
+        
+        if cfg.model.head.type == "multi_binary":
+            self.hist = {
+                "epoch":      [],
+                "train_loss": [], "val_loss":  [],
+                "train_ap":   [], "val_ap":    [],
+                "train_auc":  [], "val_auc":   [],
+            }
+        elif cfg.model.head.type == "multi_regression":
+            self.hist = {
+                "epoch":      [],
+                "train_loss": [], "val_loss":  [],
+                "train_mse":  [], "val_mse":   [],
+                "train_mae":  [], "val_mae":   [],
+            }
+        else:
+            raise ValueError(f"Unknown head type '{cfg.model.head.type}'")
 
     def fit(self, train_loader, val_loader, criterion):
         for epoch in range(1, self.cfg.training.epochs + 1):
@@ -64,8 +75,12 @@ class Trainer:
 
             self.optimizer.zero_grad()
             with torch.autocast(device_type="cuda", dtype=torch.float16):
-                logits = self.model(imgs)
-                loss   = criterion(logits, labels)
+                    logits = self.model(imgs)                        
+                    if self.cfg.loss.type == "KLDiv":
+                        _logits = F.log_softmax(logits, dim=1)
+                        loss   = criterion(_logits, labels)
+                    else : 
+                        loss   = criterion(logits, labels)
 
             self.scaler.scale(loss).backward()
             self.scaler.step(self.optimizer)
@@ -73,9 +88,14 @@ class Trainer:
             self.strategy.post_step(self.model)
 
             loss_sum += loss.item()
-            all_probs.append(torch.sigmoid(logits).detach().cpu())
-            all_labels.append(labels.detach().cpu())
-        
+
+            if self.cfg.model.head.type == "multi_binary":
+                all_probs.append(torch.sigmoid(logits).detach().cpu())
+                all_labels.append(labels.detach().cpu())
+            elif self.cfg.model.head.type == "multi_regression":
+                all_probs.append(torch.softmax(logits, dim=1).detach().cpu())
+                all_labels.append(labels.detach().cpu())
+            
 
         return self._compute_metrics(loss_sum, all_probs, all_labels, loader)
 
@@ -93,12 +113,21 @@ class Trainer:
                 labels = labels.to(self.device)
 
                 with torch.autocast(device_type="cuda", dtype=torch.float16):
-                    logits = self.model(imgs)
-                    loss   = criterion(logits, labels)
+                    logits = self.model(imgs)                        
+                    if self.cfg.loss.type == "KLDiv":
+                        _logits = F.log_softmax(logits, dim=1)
+                        loss   = criterion(_logits, labels)
+                    else : 
+                        loss   = criterion(logits, labels)
 
                 loss_sum += loss.item()
-                all_probs.append(torch.sigmoid(logits).detach().cpu())
-                all_labels.append(labels.detach().cpu())
+
+                if self.cfg.model.head.type == "multi_binary":
+                    all_probs.append(torch.sigmoid(logits).detach().cpu())
+                    all_labels.append(labels.detach().cpu())
+                elif self.cfg.model.head.type == "multi_regression":
+                    all_probs.append(torch.softmax(logits, dim=1).detach().cpu())
+                    all_labels.append(labels.detach().cpu())
 
         if hasattr(self.strategy, "restore_ema"):
             self.strategy.restore_ema(self.model)
@@ -112,36 +141,57 @@ class Trainer:
         labels = torch.cat(all_labels).numpy()
         loss   = loss_sum / max(1, len(loader))
 
-        ap = average_precision_score(labels, probs, average=None)
+        if self.cfg.model.head.type == "multi_binary":
+            ap = average_precision_score(labels, probs, average=None)
 
-        try:
-            auc = roc_auc_score(labels, probs, average=None)
-        except ValueError:
-            n   = labels.shape[1]
-            auc = np.array([
-                roc_auc_score(labels[:, i], probs[:, i])
-                if len(np.unique(labels[:, i])) > 1 else float("nan")
-                for i in range(n)
-            ])
+            try:
+                auc = roc_auc_score(labels, probs, average=None)
+            except ValueError:
+                n   = labels.shape[1]
+                auc = np.array([
+                    roc_auc_score(labels[:, i], probs[:, i])
+                    if len(np.unique(labels[:, i])) > 1 else float("nan")
+                    for i in range(n)
+                ])
+            return {"loss": loss, "ap": ap, "auc": auc}
+        
+        elif self.cfg.model.head.type == "multi_regression":
+            mse = np.mean((probs - labels) ** 2, axis=0)
+            mae = np.mean(np.abs(probs - labels), axis=0)
+            return {"loss": loss, "mse": mse, "mae": mae}
 
-        return {"loss": loss, "ap": ap, "auc": auc}
+        
 
     def _update_hist(self, epoch, tr, va):
         self.hist["epoch"].append(epoch)
         self.hist["train_loss"].append(tr["loss"])
         self.hist["val_loss"].append(va["loss"])
-        self.hist["train_ap"].append(tr["ap"])
-        self.hist["val_ap"].append(va["ap"])
-        self.hist["train_auc"].append(tr["auc"])
-        self.hist["val_auc"].append(va["auc"])
+
+        if self.cfg.model.head.type == "multi_binary":
+            self.hist["train_ap"].append(tr["ap"])
+            self.hist["val_ap"].append(va["ap"])
+            self.hist["train_auc"].append(tr["auc"])
+            self.hist["val_auc"].append(va["auc"])
+        elif self.cfg.model.head.type == "multi_regression":
+            self.hist["train_mse"].append(tr["mse"])
+            self.hist["val_mse"].append(va["mse"])
+            self.hist["train_mae"].append(tr["mae"])
+            self.hist["val_mae"].append(va["mae"])
 
     def _log(self, epoch, tr, va):
         import numpy as np
-        print(
-            f"[{epoch:03d}] "
-            f"train  loss {tr['loss']:.4f}  mAP {np.mean(tr['ap']):.4f}  AUC {np.nanmean(tr['auc']):.4f} | "
-            f"val    loss {va['loss']:.4f}  mAP {np.mean(va['ap']):.4f}  AUC {np.nanmean(va['auc']):.4f}"
-        )
+        if self.cfg.model.head.type == "multi_binary":
+            print(
+                f"[{epoch:03d}] "
+                f"train  loss {tr['loss']:.4f}  mAP {np.mean(tr['ap']):.4f}  AUC {np.nanmean(tr['auc']):.4f} | "
+                f"val    loss {va['loss']:.4f}  mAP {np.mean(va['ap']):.4f}  AUC {np.nanmean(va['auc']):.4f}"
+            )
+        elif self.cfg.model.head.type == "multi_regression":
+            print(
+                f"[{epoch:03d}] "
+                f"train  loss {tr['loss']:.4f}  MSE {np.mean(tr['mse']):.4f}  MAE {np.mean(tr['mae']):.4f} | "
+                f"val    loss {va['loss']:.4f}  MSE {np.mean(va['mse']):.4f}  MAE {np.mean(va['mae']):.4f}"
+            )
 
     def _save_checkpoint(self, epoch):
         import copy
