@@ -55,7 +55,7 @@ experiments:
         num_classes: 10
         dropout: 0.1
     strategy:
-      type: frozen_backbone
+      type: LORA_backbone
     data:
       binarize: true
     training:

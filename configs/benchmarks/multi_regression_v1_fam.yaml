@@ -1,8 +1,8 @@
 benchmark:
-  name: classification_v1_genre
+  name: regression_v1_fam
   img_folder: V0_NEW_Segmented-Aves-Back-224-RGBA
-  dataset_dir: cross_version_1_GENRE
-  metric: val_auc
+  dataset_dir: cross_version_1_FAM
+  metric: val_mse
   folds:
   - 0
   - 1
@@ -14,30 +14,39 @@ experiments:
         name: dinov3_vits16
         lora: null
       head:
-        type: multi_binary
+        type: multi_regression
         feat_dim: 384
         num_classes: 10
         dropout: 0.1
     strategy:
       type: frozen_backbone
     data:
-      binarize: true
+      binarize: False
     training:
-      epochs: 10
+      epochs: 5
       lr: 1e-4
       batch_size: 256
     loss:
-      type: bce_weighted
+      type: KLDiv
     folds:
       0:
-        status: failed
+        status: pending
         run_dir: dinov3S_Freeze_cross_v1/fold_0
       1:
-        status: failed
+        status: pending
         run_dir: dinov3S_Freeze_cross_v1/fold_1
       2:
-        status: failed
+        status: pending
         run_dir: dinov3S_Freeze_cross_v1/fold_2
+
+    callbacks:
+    - metrics_dump
+    - plotting
+    - checkpoint
+    - history_dump
+    - inferenceMultiBin
+
+
   dinov3_LORA:
     model:
       backbone:
@@ -50,27 +59,27 @@ experiments:
           - attn.qkv
           - attn.proj
       head:
-        type: multi_binary
+        type: multi_regression
         feat_dim: 384
         num_classes: 10
         dropout: 0.1
     strategy:
       type: LORA_backbone
     data:
-      binarize: true
+      binarize: False
     training:
       epochs: 100
       lr: 1e-4
       batch_size: 64
     loss:
-      type: bce_weighted
+      type: KLDiv
     folds:
       0:
-        status: waiting
+        status: pending
         run_dir: dinov3S_LORA_cross_v1/fold_0
       1:
-        status: waiting
+        status: pending
         run_dir: dinov3S_LORA_cross_v1/fold_1
       2:
-        status: waiting
+        status: pending
         run_dir: dinov3S_LORA_cross_v1/fold_2

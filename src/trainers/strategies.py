@@ -7,9 +7,8 @@ class FrozenBackbone:
     needs_optimizer_refresh = False
 
     def setup(self, model, cfg):
-        if not cfg.model.backbone.get("lora") :
-            for p in model.backbone.parameters():
-                p.requires_grad = False
+        for p in model.backbone.parameters():
+            p.requires_grad = False
         for p in model.head.parameters():
             p.requires_grad = True
 
@@ -33,10 +32,38 @@ class FrozenBackbone:
             eta_min=cfg.training.lr_min,
         )
 
+class LORABackbone:
+    needs_optimizer_refresh = False
+
+    def setup(self, model, cfg):
+        for p in model.head.parameters():
+            p.requires_grad = True
+
+    def on_epoch_start(self, epoch, model, cfg, optimizer, scheduler):
+        return None, None
+
+    def post_step(self, model):
+        pass
+
+    def build_optimizer(self, model, cfg):
+        return torch.optim.AdamW(
+            filter(lambda p: p.requires_grad, model.parameters()),
+            lr=cfg.training.lr,
+            weight_decay=cfg.training.weight_decay,
+        )
+
+    def build_scheduler(self, optimizer, cfg):
+        return CosineAnnealingLR(
+            optimizer,
+            T_max=cfg.training.epochs,
+            eta_min=cfg.training.lr_min,
+        )
+    
 
 
 STRATEGY_REGISTRY = {
     "frozen_backbone":      FrozenBackbone,
+    "LORA_backbone":        LORABackbone,
 }
 
 

@@ -31,6 +31,9 @@ def build_callbacks(cfg, val_loader=None, data_dir=None):
             assert data_dir is not None, \
                 "inference callback requires data_source argument"
             callbacks.append(cls(cfg, data_dir=data_dir, val_loader=val_loader))
-        else:
+        elif cls is PlottingCallback:
             callbacks.append(cls())
+        elif cls is MetricsDumpCallback:
+            callbacks.append(cls(cfg))
+        else:            raise ValueError(f"Don't know how to initialize callback '{name}'")
     return callbacks
