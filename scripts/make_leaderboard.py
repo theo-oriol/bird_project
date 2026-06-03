@@ -96,7 +96,6 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None):
     # ---- summary across folds ----
     def stats(values):
         values = [v for v in values if v is not None]
-        print(values)
         if not values:
             return None, None, None, None
         return (
