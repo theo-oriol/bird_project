@@ -4,6 +4,7 @@ data:
   fold: 0
   binarize: false           # true for multi_binary, false for regression/quantile
   num_classes: 10
+  additional_transforms: null
 
 model:
   backbone:
@@ -34,3 +35,5 @@ callbacks:
   - checkpoint
   - history_dump
   - inference
+
+

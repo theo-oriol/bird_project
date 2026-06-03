@@ -45,14 +45,30 @@ class BirdDataset(Dataset):
         binarize   : if True, converts soft labels to binary (for BCE tasks)
     """
 
-    def __init__(self, paths, labels, img_dir, transform=None, binarize=False):
+    def __init__(self, paths, labels, img_dir, cfg, transform=None, is_train=False, binarize=False):
         assert len(paths) == len(labels)
         self.paths     = paths
         self.labels    = labels
         self.img_dir   = img_dir
-        self.transform = transform
+        self.cfg = cfg  
+        self.transform_function = transform
         self.binarize  = binarize
+        self.is_train = is_train
 
+        RGBA_TRANSFORMS = {"maskonly", "gaussian_blur", "shuffle_mask_pixels", "greyscale_view"}
+        self.additional = set(self.cfg.data.get("additional_transforms") or [])
+        self.needs_rgba = bool(self.additional & RGBA_TRANSFORMS)
+
+        if "greyscale_view" in self.additional:
+            img_dir_Back_name = os.path.basename(img_dir)
+            img_dir_Side_name = os.path.basename(img_dir).replace("Back", "Side")
+            img_dir_Belly_name = os.path.basename(img_dir).replace("Back", "Belly")
+            self.transform_back = self.transform_function(cfg=cfg,is_train=is_train, view="Back", meta_dir=os.path.join(CONFIG_DIR,"meta_data","grayscale",img_dir_Back_name))
+            self.transform_side = self.transform_function(cfg=cfg,is_train=is_train, view="Side", meta_dir=os.path.join(CONFIG_DIR,"meta_data","grayscale",img_dir_Side_name))
+            self.transform_belly = self.transform_function(cfg=cfg,is_train=is_train, view="Belly", meta_dir=os.path.join(CONFIG_DIR,"meta_data","grayscale",img_dir_Belly_name))
+        else :
+            self.transform = self.transform_function(cfg=cfg, is_train=is_train, view=None, meta_dir=None)
+            
     def __len__(self):
         return len(self.paths)
 
@@ -64,9 +80,18 @@ class BirdDataset(Dataset):
         elif "Side" in self.paths[idx]:
             img_path = img_path.replace("Back", "Side")
 
-        img  = Image.open(img_path).convert("RGB")
+        img = Image.open(img_path).convert("RGBA" if self.needs_rgba else "RGB")
 
-        if self.transform:
+        if "greyscale_view" in self.additional:
+            if "Back" in self.paths[idx]:
+                img = self.transform_back(img)
+            elif "Side" in self.paths[idx]:
+                img = self.transform_side(img)
+            elif "Belly" in self.paths[idx]:
+                img = self.transform_belly(img)
+            else : 
+                raise ValueError(f"Unknown view in path '{self.paths[idx]}'")
+        else :
             img = self.transform(img)
 
         label = self.labels[idx].copy()
@@ -93,15 +118,23 @@ def build_dataloaders(cfg, dataset_dir, img_folder):
     valid_paths, valid_labels = load_csv(
         os.path.join(data_dir, f"valid_fold_{fold}.csv")
     )
-
+    # ########################################################################################
+    # print("TEST VERSION !!!!!!!!!!!!!!")
+    # train_paths = train_paths[:500]
+    # train_labels = train_labels[:500]
+    # valid_paths = valid_paths[:500]
+    # valid_labels = valid_labels[:500]
+    # #########################################################################################
     ds_train = BirdDataset(
-        train_paths, train_labels, img_dir,
-        transform=make_transforms(cfg, is_train=True),
+        train_paths, train_labels, img_dir, cfg,
+        transform=make_transforms,
+        is_train = True,
         binarize=binarize,
     )
     ds_val = BirdDataset(
-        valid_paths, valid_labels, img_dir,
-        transform=make_transforms(cfg, is_train=False),
+        valid_paths, valid_labels, img_dir, cfg,
+        transform=make_transforms,
+        is_train = False,
         binarize=binarize,
     )
 

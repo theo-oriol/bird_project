@@ -219,7 +219,6 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 experiments/
-data/datasets/
 __pycache__/
 *.pyc
 .env

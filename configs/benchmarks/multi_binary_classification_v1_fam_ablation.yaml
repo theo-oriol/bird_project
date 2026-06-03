@@ -1,0 +1,43 @@
+benchmark:
+  name: classification_v1_fam_ablation_fold_0
+  img_folder: V0_NEW_Segmented-Aves-Back-224-RGBA
+  dataset_dir: cross_version_1_FAM
+  metric: val_auc
+  folds:
+  - 0
+experiments:
+  dinov3_LORA:
+    model:
+      backbone:
+        name: dinov3_vits16
+        lora:
+          r: 8
+          alpha: 16
+          dropout: 0.05
+          target_modules:
+          - attn.qkv
+          - attn.proj
+      head:
+        type: multi_binary
+        feat_dim: 384
+        num_classes: 10
+        dropout: 0.1
+    strategy:
+      type: LORA_backbone
+    data:
+      binarize: true
+      additional_transforms:
+      - maskonly
+      - gaussian_blur
+      - shuffle_mask_pixels
+      - greyscale_view
+    training:
+      epochs: 5
+      lr: 1e-4
+      batch_size: 256
+    loss:
+      type: bce_weighted
+    folds:
+      0:
+        status: done
+        run_dir: dinov3S_LORA_cross_v1/fold_0

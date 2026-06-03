@@ -222,28 +222,17 @@ class InferenceMultiRegCallback:
             p_vals = preds[:, i]
             t_vals = labels[:, i]
 
-            # skip if all targets are identical (rho undefined)
-            # if len(np.unique(t_vals)) < 2:
-            #     spearman_per_class[c] = {"rho": None, "pvalue": None}
-            #     continue
             if len(np.unique(t_vals)) < 2:
                  spearman_per_class[c] = None
                  continue
             rho, pvalue = spearmanr(p_vals, t_vals)
-            # spearman_per_class[c] = {
-            #     "rho":    float(rho),
-            #     "pvalue": float(pvalue),
-            # }
+
             spearman_per_class[c] = float(pvalue)
 
-        # overall: flatten all outputs together
         rho_overall, pvalue_overall = spearmanr(
             preds.flatten(), labels.flatten()
         )
-        # spearman_overall = {
-        #     "rho":    float(rho_overall),
-        #     "pvalue": float(pvalue_overall),
-        # }
+
         spearman_overall = float(pvalue_overall)
 
         return spearman_per_class, spearman_overall
@@ -264,13 +253,8 @@ class InferenceMultiRegCallback:
             json.dump(metrics, f, indent=2)
 
         print("[inference] Spearman results added to metrics.json")
-        # print(f"  overall rho={spearman_overall['rho']:.4f}  p={spearman_overall['pvalue']:.4e}")
         print(f"  overall p={spearman_overall:.4e}")
         for c, s in spearman_per_class.items():
-            # if s["rho"] is not None:
-            #     print(f"  class {c:>8} : rho={s['rho']:.4f}  p={s['pvalue']:.4e}")
-            # else:
-            #     print(f"  class {c:>8} : N/A")
             if s is not None:
                 print(f"  class {c:>8} : p={s:.4e}")
             else:
