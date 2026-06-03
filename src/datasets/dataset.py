@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from PIL import Image
 from torch.utils.data import Dataset, DataLoader
 from torchvision import transforms as T
-
+from .transforms import make_transforms
 load_dotenv()
 
 
@@ -31,21 +31,6 @@ def load_csv(path):
     row_sums = np.where(row_sums < 1e-12, 1.0, row_sums)
     y = y / row_sums
     return X, y
-
-
-def make_transforms(is_train):
-    mean = (0.485, 0.456, 0.406)
-    std  = (0.229, 0.224, 0.225)
-    if is_train:
-        return T.Compose([
-            T.RandomVerticalFlip(),
-            T.ToTensor(),
-            T.Normalize(mean, std),
-        ])
-    return T.Compose([
-        T.ToTensor(),
-        T.Normalize(mean, std),
-    ])
 
 
 class BirdDataset(Dataset):
@@ -111,12 +96,12 @@ def build_dataloaders(cfg, dataset_dir, img_folder):
 
     ds_train = BirdDataset(
         train_paths, train_labels, img_dir,
-        transform=make_transforms(is_train=True),
+        transform=make_transforms(cfg, is_train=True),
         binarize=binarize,
     )
     ds_val = BirdDataset(
         valid_paths, valid_labels, img_dir,
-        transform=make_transforms(is_train=False),
+        transform=make_transforms(cfg, is_train=False),
         binarize=binarize,
     )
 

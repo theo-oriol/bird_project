@@ -56,9 +56,9 @@ ebird_dict = df_ebird.set_index("species_key")[LABEL_COLS].to_dict("index")
 img_paths = [
     f
     for f in chain(
-        os.listdir(SOURCE_IMG_BACK),
-        os.listdir(SOURCE_IMG_SIDE),
-        os.listdir(SOURCE_IMG_BELLY),
+        os.listdir(SOURCE_IMG_BACK)[:1000],
+        os.listdir(SOURCE_IMG_SIDE)[:1000],
+        os.listdir(SOURCE_IMG_BELLY)[:1000],
     )
     if f.endswith(".png")
 ]

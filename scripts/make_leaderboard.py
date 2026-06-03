@@ -80,8 +80,8 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None):
                 row[f"MSE_{name}"] = mse_per_class[i] if i < len(mse_per_class) else None
                 row[f"MAE_{name}"] = mae_per_class[i] if i < len(mae_per_class) else None
 
-            pval_per_class  = m.get("spearman_pvalue_per_class", {})
-            pval_overall    = m.get("spearman_pvalue_overall")
+            pval_per_class  = m.get("spearman_per_class", {})
+            pval_overall    = m.get("spearman_overall")
 
             for name in class_names:
                 row[f"pval_{name}"] = pval_per_class.get(str(name))
@@ -96,6 +96,7 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None):
     # ---- summary across folds ----
     def stats(values):
         values = [v for v in values if v is not None]
+        print(values)
         if not values:
             return None, None, None, None
         return (
@@ -153,12 +154,10 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None):
             summary[f"MSE_{name}_std"]  = mse_std
             summary[f"MAE_{name}_mean"] = mae_mean
             summary[f"MAE_{name}_std"]  = mae_std
-
         for name in class_names:
             pv_mean, pv_std, _, _ = stats([r[f"pval_{name}"] for r in fold_rows])
             summary[f"pval_{name}_mean"] = pv_mean
             summary[f"pval_{name}_std"]  = pv_std
-
         pv_mean, pv_std, _, _ = stats([r["pval_overall"] for r in fold_rows])
         summary["pval_overall_mean"] = pv_mean
         summary["pval_overall_std"]  = pv_std
