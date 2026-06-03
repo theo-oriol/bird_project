@@ -32,12 +32,12 @@ experiments:
       - shuffle_mask_pixels
       - greyscale_view
     training:
-      epochs: 5
+      epochs: 100
       lr: 1e-4
-      batch_size: 256
+      batch_size: 64
     loss:
       type: bce_weighted
     folds:
       0:
-        status: done
+        status: running
         run_dir: dinov3S_LORA_cross_v1/fold_0
