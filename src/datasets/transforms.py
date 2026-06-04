@@ -11,12 +11,13 @@ def make_transforms_inf_dataaug(cfg, is_train, view=None, meta_dir=None):
     mean = (0.485, 0.456, 0.406)
     std  = (0.229, 0.224, 0.225)
 
+    
+    additional_transforms = cfg.data.get("additional_transforms") or []
+    if isinstance(additional_transforms, str):
+        additional_transforms = [additional_transforms]
+    
     ad_augment =  []
-    list_of_transforms = cfg.data.get("additional_transforms", []) or []
-    if len(list_of_transforms[0]) == 1:
-        list_of_transforms = [list_of_transforms]
-        
-    for t in list_of_transforms:
+    for t in additional_transforms:
         if t == "maskonly":
             ad_augment.append(MaskOnly())
         elif t == "gaussian_blur":
@@ -44,12 +45,12 @@ def make_transforms(cfg, is_train, view=None, meta_dir=None):
     mean = (0.485, 0.456, 0.406)
     std  = (0.229, 0.224, 0.225)
 
+    additional_transforms = cfg.data.get("additional_transforms") or []
+    if isinstance(additional_transforms, str):
+        additional_transforms = [additional_transforms]
+    
     ad_augment =  []
-    list_of_transforms = cfg.data.get("additional_transforms", []) or []
-    if len(list_of_transforms[0]) == 1:
-        list_of_transforms = [list_of_transforms]
-
-    for t in list_of_transforms:
+    for t in additional_transforms:
         if t == "maskonly":
             ad_augment.append(MaskOnly())
         elif t == "gaussian_blur":

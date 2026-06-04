@@ -56,10 +56,11 @@ class BirdDataset(Dataset):
         self.is_train = is_train
 
         RGBA_TRANSFORMS = {"maskonly", "gaussian_blur", "shuffle_mask_pixels", "greyscale_view"}
-        list_of_transforms = cfg.data.get("additional_transforms", []) or []
-        if len(list_of_transforms[0]) == 1:
-            list_of_transforms = [list_of_transforms]
-        self.additional = set(list_of_transforms)
+        raw = cfg.data.get("additional_transforms", []) or []
+
+        if isinstance(raw, str):
+            raw = [raw]
+        self.additional = set(raw)
 
         self.needs_rgba = bool(self.additional & RGBA_TRANSFORMS)
 
@@ -123,11 +124,11 @@ def build_dataloaders(cfg, dataset_dir, img_folder):
         os.path.join(data_dir, f"valid_fold_{fold}.csv")
     )
     # ########################################################################################
-    # print("TEST VERSION !!!!!!!!!!!!!!")
-    # train_paths = train_paths[:500]
-    # train_labels = train_labels[:500]
-    # valid_paths = valid_paths[:500]
-    # valid_labels = valid_labels[:500]
+    print("TEST VERSION !!!!!!!!!!!!!!")
+    train_paths = train_paths[:500]
+    train_labels = train_labels[:500]
+    valid_paths = valid_paths[:500]
+    valid_labels = valid_labels[:500]
     # #########################################################################################
     ds_train = BirdDataset(
         train_paths, train_labels, img_dir, cfg,
