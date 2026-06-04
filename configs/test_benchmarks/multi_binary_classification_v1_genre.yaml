@@ -1,8 +1,8 @@
 benchmark:
-  name: regression_v1_fam
+  name: classification_v1_genre
   img_folder: V0_NEW_Segmented-Aves-Back-224-RGBA
-  dataset_dir: cross_version_1_FAM
-  metric: val_mse
+  dataset_dir: cross_version_1_GENRE
+  metric: val_auc
   folds:
   - 0
   - 1
@@ -14,36 +14,30 @@ experiments:
         name: dinov3_vits16
         lora: null
       head:
-        type: multi_regression
+        type: multi_binary
         feat_dim: 384
         num_classes: 10
         dropout: 0.1
     strategy:
       type: frozen_backbone
     data:
-      binarize: false
+      binarize: true
     training:
-      epochs: 100
+      epochs: 5
       lr: 1e-4
-      batch_size: 64
+      batch_size: 256
     loss:
-      type: KLDiv
+      type: bce_weighted
     folds:
       0:
-        status: pending
+        status: done
         run_dir: dinov3S_Freeze_cross_v1/fold_0
       1:
-        status: pending
+        status: done
         run_dir: dinov3S_Freeze_cross_v1/fold_1
       2:
-        status: pending
+        status: done
         run_dir: dinov3S_Freeze_cross_v1/fold_2
-    callbacks:
-    - metrics_dump
-    - plotting
-    - checkpoint
-    - history_dump
-    - inference
   dinov3_LORA:
     model:
       backbone:
@@ -56,27 +50,27 @@ experiments:
           - attn.qkv
           - attn.proj
       head:
-        type: multi_regression
+        type: multi_binary
         feat_dim: 384
         num_classes: 10
         dropout: 0.1
     strategy:
       type: LORA_backbone
     data:
-      binarize: false
+      binarize: true
     training:
-      epochs: 100
+      epochs: 5
       lr: 1e-4
-      batch_size: 64
+      batch_size: 256
     loss:
-      type: KLDiv
+      type: bce_weighted
     folds:
       0:
-        status: pending
+        status: done
         run_dir: dinov3S_LORA_cross_v1/fold_0
       1:
-        status: pending
+        status: done
         run_dir: dinov3S_LORA_cross_v1/fold_1
       2:
-        status: pending
+        status: done
         run_dir: dinov3S_LORA_cross_v1/fold_2
