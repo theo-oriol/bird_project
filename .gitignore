@@ -219,7 +219,6 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 experiments/
-.benchmarks/
 __pycache__/
 *.pyc
 .env
@@ -228,3 +227,4 @@ __pycache__/
 .env
 benchmarks/cross/*.csv
 benchmarks/per_fold/*.csv
+benchmarks/ablation/*.csv
