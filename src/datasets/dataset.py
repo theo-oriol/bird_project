@@ -123,11 +123,11 @@ def build_dataloaders(cfg, dataset_dir, img_folder):
         os.path.join(data_dir, f"valid_fold_{fold}.csv")
     )
     # ########################################################################################
-    # print("TEST VERSION !!!!!!!!!!!!!!")
-    # train_paths = train_paths[:500]
-    # train_labels = train_labels[:500]
-    # valid_paths = valid_paths[:500]
-    # valid_labels = valid_labels[:500]
+    print("TEST VERSION !!!!!!!!!!!!!!")
+    train_paths = train_paths[:500]
+    train_labels = train_labels[:500]
+    valid_paths = valid_paths[:500]
+    valid_labels = valid_labels[:500]
     # #########################################################################################
     ds_train = BirdDataset(
         train_paths, train_labels, img_dir, cfg,

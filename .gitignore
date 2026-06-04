@@ -219,6 +219,7 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 experiments/
+benchmarks/
 __pycache__/
 *.pyc
 .env
