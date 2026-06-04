@@ -36,7 +36,7 @@ experiments:
         status: running
         run_dir: dinov3S_Freeze_cross_v1/fold_1
       2:
-        status: done
+        status: running
         run_dir: dinov3S_Freeze_cross_v1/fold_2
   dinov3_LORA:
     model:
@@ -66,11 +66,11 @@ experiments:
       type: bce_weighted
     folds:
       0:
-        status: done
+        status: pending
         run_dir: dinov3S_LORA_cross_v1/fold_0
       1:
-        status: done
+        status: pending
         run_dir: dinov3S_LORA_cross_v1/fold_1
       2:
-        status: done
+        status: pending
         run_dir: dinov3S_LORA_cross_v1/fold_2
