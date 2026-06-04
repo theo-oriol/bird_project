@@ -23,20 +23,20 @@ experiments:
     data:
       binarize: false
     training:
-      epochs: 100
+      epochs: 5
       lr: 1e-4
-      batch_size: 64
+      batch_size: 256
     loss:
       type: KLDiv
     folds:
       0:
-        status: pending
+        status: done
         run_dir: dinov3S_Freeze_cross_v1/fold_0
       1:
-        status: pending
+        status: done
         run_dir: dinov3S_Freeze_cross_v1/fold_1
       2:
-        status: pending
+        status: done
         run_dir: dinov3S_Freeze_cross_v1/fold_2
     callbacks:
     - metrics_dump
@@ -65,18 +65,18 @@ experiments:
     data:
       binarize: false
     training:
-      epochs: 100
+      epochs: 5
       lr: 1e-4
       batch_size: 64
     loss:
       type: KLDiv
     folds:
       0:
-        status: pending
+        status: done
         run_dir: dinov3S_LORA_cross_v1/fold_0
       1:
-        status: pending
+        status: done
         run_dir: dinov3S_LORA_cross_v1/fold_1
       2:
-        status: pending
+        status: done
         run_dir: dinov3S_LORA_cross_v1/fold_2

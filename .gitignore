@@ -226,3 +226,5 @@ __pycache__/
 *.pth
 *.egg-info/
 .env
+benchmarks/cross/*.csv
+benchmarks/per_fold/*.csv
