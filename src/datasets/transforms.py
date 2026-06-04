@@ -7,12 +7,49 @@ import numpy as np
 from torchvision import transforms as T
 
 
+def make_transforms_inf_dataaug(cfg, is_train, view=None, meta_dir=None):
+    mean = (0.485, 0.456, 0.406)
+    std  = (0.229, 0.224, 0.225)
+
+    ad_augment =  []
+    list_of_transforms = cfg.data.get("additional_transforms", []) or []
+    if len(list_of_transforms[0]) == 1:
+        list_of_transforms = [list_of_transforms]
+        
+    for t in list_of_transforms:
+        if t == "maskonly":
+            ad_augment.append(MaskOnly())
+        elif t == "gaussian_blur":
+            ad_augment.append(GaussianBlur())
+        elif t == "shuffle_mask_pixels":
+            ad_augment.append(ShuffleMaskPixels())
+        elif t == "greyscale_view":
+            assert view is not None and meta_dir is not None, \
+                "greyscale_view transform requires view and meta_dir arguments"
+            ad_augment.append(GrayscaleView(view=view, meta_dir=meta_dir))
+        elif t == "no_aug" : pass
+        else:
+            raise ValueError(f"Unknown additional transform '{t}'")
+    
+    return T.Compose([
+        *ad_augment,
+        T.ToTensor(),
+        T.Lambda(lambda x: x[:3]),
+        T.Normalize(mean, std),
+    ])
+
+
+
 def make_transforms(cfg, is_train, view=None, meta_dir=None):
     mean = (0.485, 0.456, 0.406)
     std  = (0.229, 0.224, 0.225)
 
     ad_augment =  []
-    for t in cfg.data.get("additional_transforms", []) or []:
+    list_of_transforms = cfg.data.get("additional_transforms", []) or []
+    if len(list_of_transforms[0]) == 1:
+        list_of_transforms = [list_of_transforms]
+
+    for t in list_of_transforms:
         if t == "maskonly":
             ad_augment.append(MaskOnly())
         elif t == "gaussian_blur":

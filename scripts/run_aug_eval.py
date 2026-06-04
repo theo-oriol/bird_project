@@ -18,7 +18,7 @@ from scipy.stats import mannwhitneyu
 
 from src.models.factory      import build_model
 from src.datasets.dataset    import BirdDataset, load_csv
-from src.datasets.transforms import make_transforms
+from src.datasets.transforms import make_transforms_inf_dataaug
 
 
 CONFIG_DIR = Path("configs")
@@ -52,7 +52,7 @@ def load_model(run_dir, cfg):
 def build_aug_loader(omega_cfg, aug_name, dataset_dir, img_dir, fold):
     aug_cfg = OmegaConf.merge(
         omega_cfg,
-        OmegaConf.create({"data": {"augmentation": aug_name}})
+        OmegaConf.create({"data": {"additional_transforms": aug_name}})
     )
 
     data_dir = os.path.join(CROSS_PATH, dataset_dir)        # path to the fold CSVs
@@ -62,17 +62,10 @@ def build_aug_loader(omega_cfg, aug_name, dataset_dir, img_dir, fold):
         os.path.join(dataset_dir, f"valid_fold_{fold}.csv")
     )
 
-    # infer view from img_dir name
-    view = None
-    for v in ("Back", "Side", "Belly"):
-        if v in img_dir:
-            view = v
-            break
-
     ds_val = BirdDataset(
         valid_paths, valid_labels, img_dir,
         cfg=aug_cfg,
-        transform=make_transforms,
+        transform=make_transforms_inf_dataaug,
         is_train=False,
         binarize=aug_cfg.data.get("binarize", False),
     )
@@ -211,8 +204,7 @@ def main():
                 print(f"  [skip] {e}")
                 continue
 
-            
-            aug_names = exp_cfg.model.data.get("additional_transforms", None)
+            aug_names = exp_cfg["data"].get("additional_transforms", None)
             if aug_names is None:
                 raise ValueError(f"No additional_transforms defined for experiment '{exp_name}' in config.yaml")
             aug_names.append("no_aug") 
@@ -309,7 +301,9 @@ def main():
     df_summary.insert(0, "rank", df_summary.index + 1)
 
     # save
-    out_dir  = Path(args.benchmark).parent
+    out_dir  = Path("benchmarks/ablation") / bench["name"]
+    out_dir.mkdir(parents=True, exist_ok=True)
+
     stem     = Path(args.benchmark).stem
     df_summary.to_csv(out_dir / f"{stem}_aug_leaderboard.csv",   index=False)
     df.to_csv(       out_dir / f"{stem}_aug_folds.csv",          index=False)

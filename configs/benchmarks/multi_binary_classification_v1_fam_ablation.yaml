@@ -39,5 +39,5 @@ experiments:
       type: bce_weighted
     folds:
       0:
-        status: running
+        status: done
         run_dir: dinov3S_LORA_cross_v1/fold_0

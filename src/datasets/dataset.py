@@ -56,7 +56,11 @@ class BirdDataset(Dataset):
         self.is_train = is_train
 
         RGBA_TRANSFORMS = {"maskonly", "gaussian_blur", "shuffle_mask_pixels", "greyscale_view"}
-        self.additional = set(self.cfg.data.get("additional_transforms") or [])
+        list_of_transforms = cfg.data.get("additional_transforms", []) or []
+        if len(list_of_transforms[0]) == 1:
+            list_of_transforms = [list_of_transforms]
+        self.additional = set(list_of_transforms)
+
         self.needs_rgba = bool(self.additional & RGBA_TRANSFORMS)
 
         if "greyscale_view" in self.additional:
