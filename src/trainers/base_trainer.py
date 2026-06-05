@@ -76,11 +76,7 @@ class Trainer:
             self.optimizer.zero_grad()
             with torch.autocast(device_type="cuda", dtype=torch.float16):
                     logits = self.model(imgs)                        
-                    if self.cfg.loss.type == "KLDiv":
-                        _logits = F.log_softmax(logits, dim=1)
-                        loss   = criterion(_logits, labels)
-                    else : 
-                        loss   = criterion(logits, labels)
+                    loss   = criterion(logits, labels)
 
             self.scaler.scale(loss).backward()
             self.scaler.step(self.optimizer)
@@ -114,11 +110,7 @@ class Trainer:
 
                 with torch.autocast(device_type="cuda", dtype=torch.float16):
                     logits = self.model(imgs)                        
-                    if self.cfg.loss.type == "KLDiv":
-                        _logits = F.log_softmax(logits, dim=1)
-                        loss   = criterion(_logits, labels)
-                    else : 
-                        loss   = criterion(logits, labels)
+                    loss   = criterion(logits, labels)
 
                 loss_sum += loss.item()
 
