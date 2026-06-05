@@ -228,3 +228,4 @@ __pycache__/
 benchmarks/cross/*.csv
 benchmarks/per_fold/*.csv
 benchmarks/ablation/*.csv
+configs/benchmarks/*.csv
