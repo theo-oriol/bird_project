@@ -181,15 +181,15 @@ def main():
     dataset_dir = bench["dataset_dir"]
     dataset_dir = os.path.join(CROSS_PATH,dataset_dir)
 
-    label_path = Path(dataset_dir) / "labelname.json" if dataset_dir else None
+    label_path = Path(dataset_dir) / "labeltoname.json" if dataset_dir else None
     if label_path is None or not label_path.exists():
-        raise ValueError(f"Warning: labelname.json not found in {dataset_dir}, using class indices as names")
+        raise ValueError(f"Warning: labeltoname.json not found in {dataset_dir}, using class indices as names")
     
     with open(label_path, "r") as f:
         class_names = json.load(f)  
     
     if class_names is None:
-        raise ValueError("No class names found in labelname.json")
+        raise ValueError("No class names found in labeltoname.json")
 
     summary_rows = []
     fold_rows    = []
