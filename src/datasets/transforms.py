@@ -194,13 +194,22 @@ class GrayscaleView:
                       target_hist: np.ndarray) -> np.ndarray:
         flat = source.ravel().astype(np.float64)
         N = flat.size
+        if N == 0:
+            return source.copy()
 
         noise = np.random.uniform(0, 1e-9, size=N)
         sort_idx = np.argsort(flat + noise, kind='stable')
 
+        # Scale target_hist to sum exactly to N so every slot gets assigned
+        total = target_hist.sum()
+        counts = np.round(target_hist / total * N).astype(int)
+        diff = N - counts.sum()
+        if diff != 0:
+            counts[np.argmax(counts)] += diff
+
         new_values = np.empty(N, dtype=np.float64)
         pos = 0
-        for value, count in enumerate(target_hist):
+        for value, count in enumerate(counts):
             new_values[sort_idx[pos:pos + count]] = value
             pos += count
 
