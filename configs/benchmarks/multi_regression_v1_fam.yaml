@@ -30,13 +30,13 @@ experiments:
       type: KLDiv
     folds:
       0:
-        status: running
+        status: done
         run_dir: dinov3S_Freeze_cross_v1/fold_0
       1:
-        status: pending
+        status: running
         run_dir: dinov3S_Freeze_cross_v1/fold_1
       2:
-        status: pending
+        status: running
         run_dir: dinov3S_Freeze_cross_v1/fold_2
     callbacks:
     - metrics_dump
@@ -93,7 +93,7 @@ experiments:
           - attn.proj
       head:
         type: multi_regression
-        feat_dim: 1024
+        feat_dim: 384
         num_classes: 10
         dropout: 0.1
     strategy:
