@@ -141,10 +141,10 @@ experiments:
     folds:
       0:
         status: done
-        run_dir: dinov3S_LORA_cross_v1/fold_0
+        run_dir: dinov3S_LORA_ASL_cross_v1/fold_0
       1:
         status: done
-        run_dir: dinov3S_LORA_cross_v1/fold_1
+        run_dir: dinov3S_LORA_ASL_cross_v1/fold_1
       2:
         status: done
-        run_dir: dinov3S_LORA_cross_v1/fold_2
+        run_dir: dinov3S_LORA_ASL_cross_v1/fold_2

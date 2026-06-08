@@ -37,11 +37,20 @@ def run_fold(exp_name, fold_idx, fold_cfg, exp_cfg, bench_cfg):
 cfg   = load(BENCHMARK_PATH)
 bench = cfg["benchmark"]
 
-for exp_name, exp_cfg in cfg["experiments"].items():
+for exp_name in list(load(BENCHMARK_PATH)["experiments"].keys()):
     print(f"\n{'='*60}\n{exp_name}\n{'='*60}")
 
+    # reload before each fold to catch any changes made while running
+    cfg     = load(BENCHMARK_PATH)
+    exp_cfg = cfg["experiments"][exp_name]
+    bench   = cfg["benchmark"]
+
     for fold_idx, fold_cfg in exp_cfg["folds"].items():
-        if fold_cfg["status"] == "pending" or fold_cfg["status"] == "failed" :
+        # reload again right before launching to avoid race conditions
+        cfg      = load(BENCHMARK_PATH)
+        fold_cfg = cfg["experiments"][exp_name]["folds"][fold_idx]
+
+        if fold_cfg["status"] in ("pending", "failed"):
             print(f"  launching fold {fold_idx}...")
             run_fold(exp_name, fold_idx, fold_cfg, exp_cfg, bench)
         else:

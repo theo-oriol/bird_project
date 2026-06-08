@@ -30,7 +30,7 @@ experiments:
       type: KLDiv
     folds:
       0:
-        status: pending
+        status: running
         run_dir: dinov3S_Freeze_cross_v1/fold_0
       1:
         status: pending
@@ -80,3 +80,39 @@ experiments:
       2:
         status: pending
         run_dir: dinov3S_LORA_cross_v1/fold_2
+  dinov3_LORA_L:
+    model:
+      backbone:
+        name: dinov3_vitL16
+        lora:
+          r: 8
+          alpha: 16
+          dropout: 0.05
+          target_modules:
+          - attn.qkv
+          - attn.proj
+      head:
+        type: multi_regression
+        feat_dim: 1024
+        num_classes: 10
+        dropout: 0.1
+    strategy:
+      type: LORA_backbone
+    data:
+      binarize: false
+    training:
+      epochs: 100
+      lr: 1e-4
+      batch_size: 64
+    loss:
+      type: KLDiv
+    folds:
+      0:
+        status: pending
+        run_dir: dinov3S_LORA_L_cross_v1/fold_0
+      1:
+        status: pending
+        run_dir: dinov3S_LORA_L_cross_v1/fold_1
+      2:
+        status: pending
+        run_dir: dinov3S_LORA_L_cross_v1/fold_2
