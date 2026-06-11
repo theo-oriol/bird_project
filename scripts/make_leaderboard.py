@@ -19,7 +19,7 @@ def load_fold_metrics(run_dir):
         return json.load(f)
 
 
-def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None):
+def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None, label_ids=None):
     """
     Reads metrics.json from every done fold.
     Returns a summary row + per-fold rows.
@@ -57,8 +57,9 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None):
             pval_per_class  = m.get("mannwhitney_pvalue_per_class", {})
             pval_overall    = m.get("mannwhitney_pvalue_overall")
 
-            for name in class_names:
-                row[f"pval_{name}"] = pval_per_class.get(str(name))
+            ids = label_ids if label_ids is not None else class_names
+            for i, name in enumerate(class_names):
+                row[f"pval_{name}"] = pval_per_class.get(str(ids[i]))
 
             row["pval_overall"] = pval_overall
         elif exp_cfg["model"]["head"]["type"] == "multi_regression":
@@ -83,8 +84,9 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None):
             pval_per_class  = m.get("spearman_per_class", {})
             pval_overall    = m.get("spearman_overall")
 
-            for name in class_names:
-                row[f"pval_{name}"] = pval_per_class.get(str(name))
+            ids = label_ids if label_ids is not None else class_names
+            for i, name in enumerate(class_names):
+                row[f"pval_{name}"] = pval_per_class.get(str(ids[i]))
 
             row["pval_overall"] = pval_overall
         
@@ -184,18 +186,25 @@ def main():
     label_path = Path(dataset_dir) / "labeltoname.json" if dataset_dir else None
     if label_path is None or not label_path.exists():
         raise ValueError(f"Warning: labeltoname.json not found in {dataset_dir}, using class indices as names")
-    
+
     with open(label_path, "r") as f:
-        class_names = json.load(f)  
-    
+        class_names = json.load(f)
+
     if class_names is None:
         raise ValueError("No class names found in labeltoname.json")
+
+    labelname_path = Path(dataset_dir) / "labelname.json"
+    if labelname_path.exists():
+        with open(labelname_path, "r") as f:
+            label_ids = json.load(f)
+    else:
+        label_ids = [str(i) for i in range(len(class_names))]
 
     summary_rows = []
     fold_rows    = []
 
     for exp_name, exp_cfg in cfg["experiments"].items():
-        summary, folds = summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=bench["name"])
+        summary, folds = summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=bench["name"], label_ids=label_ids)
         if summary:
             summary_rows.append(summary)
         fold_rows.extend(folds)
