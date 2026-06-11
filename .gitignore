@@ -231,4 +231,8 @@ benchmarks/ablation/*.csv
 configs/benchmarks/*
 !configs/benchmarks/.gitkeep
 data/meta/*.npy
+models/*.pth.tar
+models/*.zip
+models/**/*.safetensors
+models/**/*.gif
 slurm/*
