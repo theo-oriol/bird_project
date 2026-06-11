@@ -230,4 +230,5 @@ benchmarks/per_fold/*.csv
 benchmarks/ablation/*.csv
 configs/benchmarks/*
 !configs/benchmarks/.gitkeep
+data/meta/*.npy
 slurm/*
