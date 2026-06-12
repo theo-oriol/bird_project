@@ -22,23 +22,24 @@ for exp_name, exp_cfg in cfg["experiments"].items():
             print(f"[skip] {exp_name} fold {fold_idx} [{fold_cfg['status']}]")
             continue
 
-        run_dir  = f"experiments/{bench_name}/{fold_cfg['run_dir']}"
+        run_dir  = f"experiments/{bench_name}/{exp_name}/{fold_cfg['run_dir']}"
         job_name = f"{exp_name}_f{fold_idx}"
         log_dir  = Path(run_dir)
         log_dir.mkdir(parents=True, exist_ok=True)
 
         slurm_script = f"""#!/bin/bash
 #SBATCH --job-name={job_name}
-#SBATCH --account=phj@v100
-#SBATCH --partition=gpu_p4
+#SBATCH --account=phj@a100
+#SBATCH --partition=gpu_p5
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --gres=gpu:1
 #SBATCH --cpus-per-task=8
-#SBATCH --mem=64G
 #SBATCH --time=20:00:00
 #SBATCH --output={run_dir}/slurm_%j.out
 #SBATCH --error={run_dir}/slurm_%j.err
+#SBATCH --constraint=a100
+#SBATCH --mail-user=theo.oriol@cefe.cnrs.fr
 
 # ---- env
 export CACHE_ROOT=/lustre/fswork/projects/rech/phj/uzk68zl/.cache

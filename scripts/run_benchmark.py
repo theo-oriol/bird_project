@@ -26,7 +26,7 @@ def run_fold(exp_name, fold_idx, fold_cfg, exp_cfg, bench_cfg):
         "python", "scripts/train.py",
         "--exp-name",  exp_name,
         "--fold",      str(fold_idx),
-        "--run-dir",   os.path.join("experiments", bench_cfg["name"], fold_cfg["run_dir"]),
+        "--run-dir",   os.path.join("experiments", bench_cfg["name"], exp_name, fold_cfg["run_dir"]),
         "--benchmark", str(BENCHMARK_PATH),
     ])
 
