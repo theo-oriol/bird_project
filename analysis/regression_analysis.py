@@ -47,6 +47,7 @@ for c, name in enumerate(class_names):
         "p":         p,
         "mae_constant": mae_constant,
         "mae_model":    mae_model,
+        "mae_skill" : mae_skill,
         "se":        se,
         "significant": p < 0.05,
     })
