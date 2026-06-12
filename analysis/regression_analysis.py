@@ -32,6 +32,12 @@ for c, name in enumerate(class_names):
     y_pred = probs[:, c] 
 
     slope, intercept, r, p, se = linregress(y_pred, y_true)
+
+    y_mean        = y_true.mean()
+    mae_constant   = np.mean(np.abs(y_true - y_mean))
+    mae_model      = np.mean(np.abs(y_true - (slope * y_pred + intercept)))
+    mae_skill      = 1 - mae_model / mae_constant
+
     results.append({
         "class":     name,
         "slope":     slope,
@@ -39,9 +45,12 @@ for c, name in enumerate(class_names):
         "r":         r,
         "r2":        r**2,
         "p":         p,
+        "mae_constant": mae_constant,
+        "mae_model":    mae_model,
         "se":        se,
         "significant": p < 0.05,
     })
+    
 
 df_results = pd.DataFrame(results)
 
@@ -62,3 +71,18 @@ for _, row in df_results.iterrows():
 
 print(f"\n  significant classes: {df_results['significant'].sum()}/{len(df_results)}")
 print(f"  mean r2:             {df_results['r2'].mean():.4f}")
+
+
+print(f"\n{'='*80}")
+print(f"{'class':45s} {'MAE_const':>10} {'MAE_model':>10} {'skill':>8} {'sig':>4}")
+print(f"{'='*80}")
+for _, row in df_results.iterrows():
+    sig = "✓" if row["significant"] else ""
+    print(
+        f"{row['class']:45s} "
+        f"{row['mae_constant']:>10.4f} "
+        f"{row['mae_model']:>10.4f} "
+        f"{row['mae_skill']:>8.1%} "
+        f"{sig:>4}"
+    )
+print(f"\n  mean MAE skill: {df_results['mae_skill'].mean():.1%}")
