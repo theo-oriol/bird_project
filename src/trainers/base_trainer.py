@@ -133,7 +133,7 @@ class Trainer:
         labels = torch.cat(all_labels).numpy()
         loss   = loss_sum / max(1, len(loader))
 
-        if self.cfg.model.head.type == "multi_binary":
+        if self.cfg.data.binarize == True :
             ap = average_precision_score(labels, probs, average=None)
 
             try:
@@ -147,7 +147,7 @@ class Trainer:
                 ])
             return {"loss": loss, "ap": ap, "auc": auc}
         
-        elif self.cfg.model.head.type == "multi_regression":
+        elif self.cfg.data.binarize == False :
             mse = np.mean((probs - labels) ** 2, axis=0)
             mae = np.mean(np.abs(probs - labels), axis=0)
             return {"loss": loss, "mse": mse, "mae": mae}
@@ -172,13 +172,13 @@ class Trainer:
 
     def _log(self, epoch, tr, va):
         import numpy as np
-        if self.cfg.model.head.type == "multi_binary":
+        if self.cfg.data.binarize == True :
             print(
                 f"[{epoch:03d}] "
                 f"train  loss {tr['loss']:.4f}  mAP {np.mean(tr['ap']):.4f}  AUC {np.nanmean(tr['auc']):.4f} | "
                 f"val    loss {va['loss']:.4f}  mAP {np.mean(va['ap']):.4f}  AUC {np.nanmean(va['auc']):.4f}"
             )
-        elif self.cfg.model.head.type == "multi_regression":
+        elif self.cfg.data.binarize == False :
             print(
                 f"[{epoch:03d}] "
                 f"train  loss {tr['loss']:.4f}  MSE {np.mean(tr['mse']):.4f}  MAE {np.mean(tr['mae']):.4f} | "
