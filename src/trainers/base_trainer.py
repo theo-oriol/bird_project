@@ -23,14 +23,14 @@ class Trainer:
         self.scheduler = self.strategy.build_scheduler(self.optimizer, cfg)
         self.scaler    = torch.amp.GradScaler()
         
-        if cfg.model.head.type == "multi_binary":
+        if self.cfg.data.binarize == True :
             self.hist = {
                 "epoch":      [],
                 "train_loss": [], "val_loss":  [],
                 "train_ap":   [], "val_ap":    [],
                 "train_auc":  [], "val_auc":   [],
             }
-        elif cfg.model.head.type == "multi_regression":
+        elif self.cfg.data.binarize == False :
             self.hist = {
                 "epoch":      [],
                 "train_loss": [], "val_loss":  [],
@@ -159,12 +159,12 @@ class Trainer:
         self.hist["train_loss"].append(tr["loss"])
         self.hist["val_loss"].append(va["loss"])
 
-        if self.cfg.model.head.type == "multi_binary":
+        if self.cfg.data.binarize == True :
             self.hist["train_ap"].append(tr["ap"])
             self.hist["val_ap"].append(va["ap"])
             self.hist["train_auc"].append(tr["auc"])
             self.hist["val_auc"].append(va["auc"])
-        elif self.cfg.model.head.type == "multi_regression":
+        elif self.cfg.data.binarize == False :
             self.hist["train_mse"].append(tr["mse"])
             self.hist["val_mse"].append(va["mse"])
             self.hist["train_mae"].append(tr["mae"])
