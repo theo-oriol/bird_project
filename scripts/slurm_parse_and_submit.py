@@ -10,6 +10,10 @@ from pathlib import Path
 
 BENCHMARK_PATH = Path(sys.argv[1])
 
+def save(cfg, path):
+    with open(path, "w") as f:
+        yaml.dump(cfg, f, default_flow_style=False, sort_keys=False)
+
 with open(BENCHMARK_PATH) as f:
     cfg = yaml.safe_load(f)
 
@@ -78,7 +82,11 @@ python scripts/train.py \\
         if result.returncode == 0:
             job_id = result.stdout.strip().split()[-1]
             print(f"[submitted] {exp_name} fold {fold_idx} → job {job_id}  ({run_dir})")
+            fold_cfg["status"] = "done"
         else:
             print(f"[error] {exp_name} fold {fold_idx}: {result.stderr.strip()}")
+            fold_cfg["status"] = "failed"
+
+        save(cfg, BENCHMARK_PATH)
 
         tmp_script.unlink()
