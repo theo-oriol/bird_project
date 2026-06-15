@@ -41,7 +41,7 @@ def kl_div_loss():
 def kl_div_weighted_loss(pos_weight):
     def _loss(inputs, targets):
         log_probs = torch.log_softmax(inputs, dim=-1)
-        kl = targets * torch.log(targets + 1e-8)-log_probs
+        kl = targets * (torch.log(targets + 1e-8) - log_probs)
         weighted = kl * pos_weight 
         return weighted.sum(dim=-1).mean() 
     return _loss
