@@ -32,6 +32,16 @@ def family_centroids(embeddings, names, img_to_family):
     return centroids, counts
 
 
+def compute_family_entropy(df: pd.DataFrame) -> pd.Series:
+    label_cols = [c for c in df.columns if c not in ["name_of_img", "genre", "species", "sexe", "family"]]
+    p = df.groupby("family")[label_cols].mean()  # mean % per label
+    p = p.div(p.sum(axis=1), axis=0)             # normalize rows to sum to 1
+    with np.errstate(divide="ignore"):
+        log_p = np.where(p > 0, np.log(p), 0.0)
+    entropy = -(p.values * log_p).sum(axis=1) / np.log(len(label_cols))  # [0, 1]
+    return pd.Series(entropy, index=p.index, name="label_entropy")
+
+
 def compute_shift(val_centroids, val_counts, train_centroids):
     train_fams = np.array(list(train_centroids.keys()))
     train_mat  = np.stack([train_centroids[f] for f in train_fams])  # (T, D)
@@ -49,7 +59,6 @@ def compute_shift(val_centroids, val_counts, train_centroids):
             "n_val":                    val_counts[vfam],
             "nearest_train_family":     train_fams[nearest_idx],
             "min_dist_to_train":        float(dists_to_train[nearest_idx]),
-            "mean_dist_to_train":       float(dists_to_train.mean()),
             "dist_to_train_global":     float(1 - float(vc @ train_global)),
         })
 
@@ -85,6 +94,8 @@ def main():
         train_lookup = dict(zip(df_train["name_of_img"], df_train["family"]))
         val_lookup   = dict(zip(df_val["name_of_img"],   df_val["family"]))
 
+        
+
         print(f"\nFold {fold}: {len(df_train['family'].unique())} train families, "
               f"{len(df_val['family'].unique())} val families")
 
@@ -96,28 +107,29 @@ def main():
             val_centroids,   val_counts  = family_centroids(emb, names, val_lookup)
 
             df = compute_shift(val_centroids, val_counts, train_centroids)
+            entropy = compute_family_entropy(df_val)
+            df = df.merge(entropy.rename("label_entropy"), left_on="val_family", right_index=True, how="left")
             df["view"] = view
             df["fold"] = fold
 
-            out = output_dir / f"family_centroid_shift_fold{fold}_{view}.csv"
-            df.to_csv(out, index=False)
-            print(f"saved {out.name}  ({len(df)} families)")
-
+            print(f"    fold {fold} {view}: {len(df)} families")
             all_rows.append(df)
 
     if all_rows:
         df_all = pd.concat(all_rows, ignore_index=True)
-        agg = (
-            df_all
-            .groupby("val_family")[["min_dist_to_train", "mean_dist_to_train",
-                                     "dist_to_train_global", "n_val"]]
-            .mean()
-            .reset_index()
-            .sort_values("min_dist_to_train", ascending=False)
-        )
-        out_agg = output_dir / "family_centroid_shift_aggregated.csv"
-        agg.to_csv(out_agg, index=False)
-        print(f"\nAggregated (mean over views & folds): {out_agg}")
+        agg_cols = ["min_dist_to_train", "dist_to_train_global", "label_entropy", "n_val"]
+
+        for view in args.views:
+            view_agg = (
+                df_all[df_all["view"] == view]
+                .groupby("val_family")[agg_cols]
+                .mean()
+                .reset_index()
+                .sort_values("min_dist_to_train", ascending=False)
+            )
+            out_view = output_dir / f"family_centroid_shift_{view}.csv"
+            view_agg.to_csv(out_view, index=False)
+            print(f"  {view}: {out_view.name}  ({len(view_agg)} families)")
 
 
 if __name__ == "__main__":
