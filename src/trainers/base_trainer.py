@@ -23,14 +23,14 @@ class Trainer:
         self.scheduler = self.strategy.build_scheduler(self.optimizer, cfg)
         self.scaler    = torch.amp.GradScaler()
         
-        if cfg.model.head.type == "multi_binary":
+        if self.cfg.data.binarize == True :
             self.hist = {
                 "epoch":      [],
                 "train_loss": [], "val_loss":  [],
                 "train_ap":   [], "val_ap":    [],
                 "train_auc":  [], "val_auc":   [],
             }
-        elif cfg.model.head.type == "multi_regression":
+        elif self.cfg.data.binarize == False :
             self.hist = {
                 "epoch":      [],
                 "train_loss": [], "val_loss":  [],
@@ -133,7 +133,7 @@ class Trainer:
         labels = torch.cat(all_labels).numpy()
         loss   = loss_sum / max(1, len(loader))
 
-        if self.cfg.model.head.type == "multi_binary":
+        if self.cfg.data.binarize == True :
             ap = average_precision_score(labels, probs, average=None)
 
             try:
@@ -147,7 +147,7 @@ class Trainer:
                 ])
             return {"loss": loss, "ap": ap, "auc": auc}
         
-        elif self.cfg.model.head.type == "multi_regression":
+        elif self.cfg.data.binarize == False :
             mse = np.mean((probs - labels) ** 2, axis=0)
             mae = np.mean(np.abs(probs - labels), axis=0)
             return {"loss": loss, "mse": mse, "mae": mae}
@@ -159,12 +159,12 @@ class Trainer:
         self.hist["train_loss"].append(tr["loss"])
         self.hist["val_loss"].append(va["loss"])
 
-        if self.cfg.model.head.type == "multi_binary":
+        if self.cfg.data.binarize == True :
             self.hist["train_ap"].append(tr["ap"])
             self.hist["val_ap"].append(va["ap"])
             self.hist["train_auc"].append(tr["auc"])
             self.hist["val_auc"].append(va["auc"])
-        elif self.cfg.model.head.type == "multi_regression":
+        elif self.cfg.data.binarize == False :
             self.hist["train_mse"].append(tr["mse"])
             self.hist["val_mse"].append(va["mse"])
             self.hist["train_mae"].append(tr["mae"])
@@ -172,13 +172,13 @@ class Trainer:
 
     def _log(self, epoch, tr, va):
         import numpy as np
-        if self.cfg.model.head.type == "multi_binary":
+        if self.cfg.data.binarize == True :
             print(
                 f"[{epoch:03d}] "
                 f"train  loss {tr['loss']:.4f}  mAP {np.mean(tr['ap']):.4f}  AUC {np.nanmean(tr['auc']):.4f} | "
                 f"val    loss {va['loss']:.4f}  mAP {np.mean(va['ap']):.4f}  AUC {np.nanmean(va['auc']):.4f}"
             )
-        elif self.cfg.model.head.type == "multi_regression":
+        elif self.cfg.data.binarize == False :
             print(
                 f"[{epoch:03d}] "
                 f"train  loss {tr['loss']:.4f}  MSE {np.mean(tr['mse']):.4f}  MAE {np.mean(tr['mae']):.4f} | "

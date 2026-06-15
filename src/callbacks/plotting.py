@@ -17,10 +17,10 @@ class PlottingCallback:
         if epoch % self.plot_every != 0 and epoch != 1:
             return
         self._plot_loss(hist, run_dir)
-        if self.cfg.model.head.type == "multi_binary":
+        if self.cfg.data.binarize == True:
             self._plot_metric(hist, "train_ap",  "val_ap",  "mAP", run_dir)
             self._plot_metric(hist, "train_auc", "val_auc", "AUC", run_dir)
-        elif self.cfg.model.head.type == "multi_regression":
+        elif self.cfg.data.binarize == False:
             self._plot_metric(hist, "train_mse", "val_mse", "MSE", run_dir)
             self._plot_metric(hist, "train_mae", "val_mae", "MAE", run_dir)
         else:
