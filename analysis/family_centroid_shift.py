@@ -37,7 +37,7 @@ def compute_family_entropy(df: pd.DataFrame) -> pd.Series:
     p = df.groupby("family")[label_cols].mean()  # mean % per label
     p = p.div(p.sum(axis=1), axis=0)             # normalize rows to sum to 1
     with np.errstate(divide="ignore"):
-        log_p = np.where(p > 0, np.log(p), 0.0)
+        log_p = np.where(p > 0, np.log2(p), 0.0)
     entropy = -(p.values * log_p).sum(axis=1) / np.log(len(label_cols))  # [0, 1]
     return pd.Series(entropy, index=p.index, name="label_entropy")
 
