@@ -12,6 +12,7 @@ BENCHMARK_PATH = Path(sys.argv[1])
 
 
 def load_fold_metrics(run_dir):
+    print("RUN DIR", run_dir)
     metrics_path = Path(run_dir) / "metrics.json"
     if not metrics_path.exists():
         return None
@@ -30,11 +31,11 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None, l
         if fold_cfg["status"] != "done":
             print(f"Fold {fold_idx} is not done yet (status: {fold_cfg['status']})")
             continue
-        m = load_fold_metrics(os.path.join("experiments", benchmark_name, fold_cfg["run_dir"]))
+        m = load_fold_metrics(os.path.join("experiments", benchmark_name, exp_name, fold_cfg["run_dir"]))
         if m is None:
             raise ValueError(f"Metrics file not found for {exp_name} fold {fold_idx}")
 
-        if exp_cfg["model"]["head"]["type"] == "multi_binary":
+        if exp_cfg["data"]["binarize"] == True:
             row = {
                 "experiment":        exp_name,
                 "fold":              fold_idx,
@@ -62,7 +63,7 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None, l
                 row[f"pval_{name}"] = pval_per_class.get(str(ids[i]))
 
             row["pval_overall"] = pval_overall
-        elif exp_cfg["model"]["head"]["type"] == "multi_regression":
+        elif exp_cfg["data"]["binarize"] == False:
             row = {
                 "experiment":        exp_name,
                 "fold":              fold_idx,
@@ -116,7 +117,7 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None, l
         "folds_done":     len(fold_rows),
         "run_dir":        str(Path(fold_rows[0]["run_dir"])),
     }
-    if exp_cfg["model"]["head"]["type"] == "multi_binary":
+    if exp_cfg["data"]["binarize"] == True:
         # mean/std/min/max for mAP and mAUC
         for key in ("val_mAP", "val_auc", "train_mAP", "train_auc"):
             mean, std, mn, mx = stats([r[key] for r in fold_rows])
@@ -142,7 +143,8 @@ def summarize_exp(exp_name, exp_cfg, metric, class_names, benchmark_name=None, l
         pv_mean, pv_std, _, _ = stats([r["pval_overall"] for r in fold_rows])
         summary["pval_overall_mean"] = pv_mean
         summary["pval_overall_std"]  = pv_std
-    elif exp_cfg["model"]["head"]["type"] == "multi_regression":
+
+    elif exp_cfg["data"]["binarize"] == False:
         for key in ("val_mse", "train_mse", "val_mae", "train_mae"):
             mean, std, mn, mx = stats([r[key] for r in fold_rows])
             summary[f"{key}_mean"] = mean
