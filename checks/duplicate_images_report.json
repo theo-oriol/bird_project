@@ -1,0 +1,38 @@
+{
+  "V0_NEW_Segmented-Aves-Back-224-RGBA": {
+    "total_files": 41901,
+    "unique_hashes": 41901,
+    "duplicate_groups": 0,
+    "duplicates": {}
+  },
+  "V0_NEW_Segmented-Aves-Belly-224-RGBA": {
+    "total_files": 41901,
+    "unique_hashes": 41901,
+    "duplicate_groups": 0,
+    "duplicates": {}
+  },
+  "V0_NEW_Segmented-Aves-Side-224-RGBA": {
+    "total_files": 41901,
+    "unique_hashes": 41901,
+    "duplicate_groups": 0,
+    "duplicates": {}
+  },
+  "NEW_Segmented-Aves-Back-224-RGBA": {
+    "total_files": 41901,
+    "unique_hashes": 41901,
+    "duplicate_groups": 0,
+    "duplicates": {}
+  },
+  "NEW_Segmented-Aves-Belly-224-RGBA": {
+    "total_files": 41901,
+    "unique_hashes": 41901,
+    "duplicate_groups": 0,
+    "duplicates": {}
+  },
+  "NEW_Segmented-Aves-Side-224-RGBA": {
+    "total_files": 41901,
+    "unique_hashes": 41901,
+    "duplicate_groups": 0,
+    "duplicates": {}
+  }
+}
