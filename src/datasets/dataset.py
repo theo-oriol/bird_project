@@ -101,7 +101,7 @@ class BirdDataset(Dataset):
 
         label = self.labels[idx].copy()
         if self.binarize:
-            label = (label > 0).astype(np.float32)
+            label = (label > self.cfg.data.seuil).astype(np.float32)
 
         return img, label, self.paths[idx]
 

@@ -5,6 +5,7 @@ data:
   binarize: false           # true for multi_binary, false for regression/quantile
   num_classes: 10
   additional_transforms: null
+  seuil: 0
 
 model:
   backbone:
