@@ -53,8 +53,9 @@ def build_criterion(cfg, train_labels=None):
     if loss_type == "bce_weighted":
         assert train_labels is not None, \
             "bce_weighted requires train_labels to compute pos_weight"
+        seuil      = cfg.data.get("seuil", 0)
         N          = train_labels.shape[0]
-        pos        = (train_labels > 0).sum(axis=0)
+        pos        = (train_labels > seuil).sum(axis=0)
         neg        = N - pos
         pos_weight = torch.from_numpy(
             neg / np.clip(pos, 1, None)
