@@ -1,0 +1,29 @@
+# standalone/configs/mil_crop_texture.yaml
+name: mil_crop_texture_v1_BIG
+
+device: cuda
+
+data:
+  dataset_dir: data/cross/cross_version_1_FAM
+  img_dir: /media/oriol@newcefe.newage.fr/LaCie/updated_version_of_dataset/NEW_Segmented-Aves-Back-PNG-Grayscale   # grayscale dataset
+  fold: 0
+  binarize: true
+
+model:
+  crop_size: 224
+  n_crops: 8
+  min_coverage: 1
+  feat_dim: 384            # dinov3_vits16 output dim
+  num_classes: 10
+  dropout: 0.1
+  backbone:
+    name: dinov3_vits16
+    local_path: /home/oriol@newcefe.newage.fr/Models/dinov3
+    weights: /media/oriol@newcefe.newage.fr/LaCie/weights/dinov3_vits16.pth
+
+training:
+  epochs: 100
+  batch_size: 32           # effective batch = batch_size * n_crops through backbone
+  num_workers: 8
+  lr: 1e-4
+  weight_decay: 1e-2
